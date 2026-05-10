@@ -12,25 +12,17 @@ class PoetryPipeline:
 
     def __init__(self, files):
 
-        # =========================================
-        # LOAD ENV
-        # =========================================
         load_dotenv()
 
         self.files = files
 
-        # =========================================
-        # OPENAI
-        # =========================================
         self.client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY")
         )
 
         self.model_name = "gpt-4o-mini"
 
-        # =========================================
-        # NEO4J
-        # =========================================
+
         self.driver = GraphDatabase.driver(
             os.getenv("NEO4J_URI"),
             auth=(
@@ -39,16 +31,11 @@ class PoetryPipeline:
             )
         )
 
-        # =========================================
-        # EMBEDDING MODEL
-        # =========================================
+
         self.embedding_model = SentenceTransformer(
             "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
         )
 
-        # =========================================
-        # CACHE
-        # =========================================
         self.cache_file = "cache.json"
 
         if os.path.exists(self.cache_file):
@@ -59,9 +46,6 @@ class PoetryPipeline:
         else:
             self.cache = {}
 
-        # =========================================
-        # PROMPT
-        # =========================================
         self.prompt_template = """
 أنت محلل متخصص في الشعر العربي.
 
@@ -109,10 +93,6 @@ class PoetryPipeline:
 النص:
 """
 
-    # =====================================================
-    # LOAD DATA
-    # =====================================================
-
     def load_data(self):
 
         chunks = []
@@ -136,30 +116,20 @@ class PoetryPipeline:
 
             except Exception as e:
 
-                print(f"❌ Error reading {f}: {e}")
+                print(f" Error reading {f}: {e}")
 
-        print(f"✅ Total chunks loaded: {len(chunks)}")
+        print(f"Total chunks loaded: {len(chunks)}")
 
         return chunks
 
-    # =====================================================
-    # GPT PARSER
-    # =====================================================
-
     def parse_text(self, text):
 
-        # =========================================
-        # CACHE
-        # =========================================
         if text in self.cache:
 
-            print("✅ Loaded from cache")
+            print("Loaded from cache")
 
             return self.cache[text]
 
-        # =========================================
-        # API CALL
-        # =========================================
         response = self.client.chat.completions.create(
 
             model=self.model_name,
@@ -186,9 +156,6 @@ class PoetryPipeline:
 
             result = json.loads(clean_json)
 
-            # =========================================
-            # SAVE CACHE
-            # =========================================
             self.cache[text] = result
 
             self.save_cache()
@@ -197,13 +164,10 @@ class PoetryPipeline:
 
         except Exception as e:
 
-            print(f"❌ JSON/API Error: {e}")
+            print(f"JSON/API Error: {e}")
 
             return []
 
-    # =====================================================
-    # SAVE CACHE
-    # =====================================================
 
     def save_cache(self):
 
@@ -216,19 +180,11 @@ class PoetryPipeline:
                 indent=2
             )
 
-        print("✅ cache saved")
-
-    # =====================================================
-    # GENERATE EMBEDDING
-    # =====================================================
+        print("cache saved")
 
     def generate_embedding(self, text):
 
         return self.embedding_model.encode(text).tolist()
-
-    # =====================================================
-    # INSERT INTO GRAPH
-    # =====================================================
 
     def insert_graph(self, item):
 
@@ -287,10 +243,6 @@ class PoetryPipeline:
         embedding=item.get("embedding", [])
         )
 
-    # =====================================================
-    # RUN PIPELINE
-    # =====================================================
-
     def run(self):
 
         chunks = self.load_data()
@@ -303,31 +255,22 @@ class PoetryPipeline:
 
                 if "verse" in item:
 
-                    # =========================================
-                    # EMBEDDING
-                    # =========================================
                     embedding = self.generate_embedding(
                         item["verse"]
                     )
 
                     item["embedding"] = embedding
 
-                    # =========================================
-                    # INSERT GRAPH
-                    # =========================================
+
                     self.insert_graph(item)
 
                     print(
-                        f"✅ تم حفظ البيت: "
+                        f" تم حفظ البيت: "
                         f"{item['verse'][:40]}..."
                     )
 
         self.driver.close()
 
-
-# =====================================================
-# FILES
-# =====================================================
 
 files = [
 
@@ -337,10 +280,6 @@ files = [
 
     "Dataset/معلقة لبيد بن ربيعة.txt"
 ]
-
-# =====================================================
-# RUN
-# =====================================================
 
 pipeline = PoetryPipeline(files)
 
