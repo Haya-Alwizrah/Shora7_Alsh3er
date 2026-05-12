@@ -1,3 +1,12 @@
+
+files = [
+
+    "Dataset/معلقة الأعشى.txt",
+
+    "Dataset/معلقة عنترة بن شداد.txt",
+
+    "Dataset/معلقة لبيد بن ربيعة.txt"
+]
 EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
 GROQ_MODEL = "llama-3.1-8b-instant"
 GROQ_KEY = "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"
@@ -31,24 +40,16 @@ answer, context = rag_system.ask(question)
 print(answer)
 
 # ---------------------------------------------
-from LLMJudge import LLMJudge
-judge_system = LLMJudge(
-    groq_key=GROQ_KEY,
-    model_name=GROQ_MODEL
-)
-
-judge_result = judge_system.judge(question, answer, context)
-print(judge_result)
-
-#------------------------------------------------------------------------
-from RAGEvaluator import RAGEvaluator
-evaluator = RAGEvaluator(
+from src.RAGEvaluationSystem import RAGEvaluationSystem
+evaluator = RAGEvaluationSystem(
     groq_key=GROQ_KEY,
     model_name=GROQ_MODEL,
     embed_model=EMBED_MODEL
-)
+    )
 
-eval_data = evaluator.load_from_excel(EVAL_PATH)
-dataset = evaluator.build_dataset(rag_system, eval_data)
-result = evaluator.evaluate(dataset)
+
+judge_result = evaluator.judge(question, answer, context)
+print(judge_result)
+
+result = evaluator.ragas_eval(rag_system, EVAL_PATH)
 print(result)
