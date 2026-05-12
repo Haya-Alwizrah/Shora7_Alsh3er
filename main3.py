@@ -8,7 +8,7 @@ CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
 
 # --------------------------------------------------------
-from DataManager import DataManager
+from src.DataManager import DataManager
 data_manager = DataManager(
     folder_path=DATA_FOLDER,
     db_path=CHROMA_PATH,
@@ -19,7 +19,7 @@ data_manager = DataManager(
 data_manager.prepare()
 
 #--------------------------------------------------------
-from RAGSystem import RAGSystem
+from src.RAGSystem import RAGSystem
 rag_system = RAGSystem(
     data_manager=data_manager,
     groq_key=GROQ_KEY,
@@ -31,7 +31,7 @@ answer, context = rag_system.ask(question)
 print(answer)
 
 # ---------------------------------------------
-from LLMJudge import LLMJudge
+from src.LLMJudge import LLMJudge
 judge_system = LLMJudge(
     groq_key=GROQ_KEY,
     model_name=GROQ_MODEL
@@ -41,7 +41,7 @@ judge_result = judge_system.judge(question, answer, context)
 print(judge_result)
 
 #------------------------------------------------------------------------
-from RAGEvaluator import RAGEvaluator
+from src.RAGEvaluator import RAGEvaluator
 evaluator = RAGEvaluator(
     groq_key=GROQ_KEY,
     model_name=GROQ_MODEL,
