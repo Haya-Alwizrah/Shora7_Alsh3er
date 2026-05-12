@@ -1,3 +1,5 @@
+import streamlit as st
+
 files = [
 
     "Dataset/معلقة الأعشى.txt",
@@ -18,37 +20,106 @@ COLLECTION_NAME = "poetry"
 
 # --------------------------------------------------------
 from src.DataManager import DataManager
-data_manager = DataManager(
-    files=files,
-    db_path=CHROMA_PATH,
-    collection_name=COLLECTION_NAME,
-    embed_model=EMBED_MODEL
-)
-
-data_manager.prepare()
-
-#--------------------------------------------------------
 from src.RAGSystem import RAGSystem
-rag_system = RAGSystem(
-    data_manager=data_manager,
-    groq_key=GROQ_KEY,
-    model_name=GROQ_MODEL
-)
-
-question = "ما اعراب ودع هريرة ان الرحل مرتحل"
-answer, context = rag_system.ask(question)
-print(answer)
-
-# ---------------------------------------------
 from src.RAGEvaluationSystem import RAGEvaluationSystem
-evaluator = RAGEvaluationSystem(
-    groq_key=GROQ_KEY,
-    model_name=GROQ_MODEL,
-    embed_model=EMBED_MODEL
+
+#---------------------------------------------------
+st.set_page_config(
+    page_title="Arabic Poetry RAG",
+    page_icon="📖",
+    layout="wide"
 )
 
-judge_result = evaluator.judge(question, answer, context)
-print(judge_result)
+st.title("📖 Arabic Poetry RAG System")
+# ---------------------------------------
+@st.cache_resource
+def load_system():
 
-result = evaluator.ragas_eval(rag_system, EVAL_PATH)
-print(result)
+    data_manager = DataManager(
+        files=files,
+        db_path=CHROMA_PATH,
+        collection_name=COLLECTION_NAME,
+        embed_model=EMBED_MODEL
+    )
+
+    data_manager.prepare()
+
+    rag_system = RAGSystem(
+        data_manager=data_manager,
+        groq_key=GROQ_KEY,
+        model_name=GROQ_MODEL
+    )
+
+    evaluator = RAGEvaluationSystem(
+        groq_key=GROQ_KEY,
+        model_name=GROQ_MODEL,
+        embed_model=EMBED_MODEL
+    )
+
+    return rag_system, evaluator
+
+rag_system, evaluator = load_system()
+
+question = st.text_input(
+    "اكتب سؤالك عن الشعر الجاهلي:",
+    placeholder="مثال: ما اعراب ودع هريرة ان الرحل مرتحل"
+)
+
+
+if st.button("اسأل"):
+
+    if question.strip() == "":
+        st.warning("اكتب سؤال أول")
+    else:
+
+        with st.spinner("جاري توليد الإجابة..."):
+
+            answer, context = rag_system.ask(question)
+
+        # ------------------------------------------------
+        # ANSWER
+        # ------------------------------------------------
+        st.subheader("📌 الإجابة")
+        st.write(answer)
+
+        # ------------------------------------------------
+        # CONTEXT
+        # ------------------------------------------------
+        with st.expander("📚 النصوص المسترجعة"):
+            if isinstance(context, list):
+                for i, chunk in enumerate(context, 1):
+                    st.markdown(f"### Chunk {i}")
+                    st.write(chunk)
+            else:
+                st.write(context)
+
+        # ------------------------------------------------
+        # JUDGE
+        # ------------------------------------------------
+        with st.spinner("جاري تقييم الإجابة..."):
+
+            judge_result = evaluator.judge(
+                question,
+                answer,
+                context
+            )
+
+        st.subheader("⚖️ تقييم الـ LLM Judge")
+        st.write(judge_result)
+
+st.divider()
+
+st.subheader("📊 تقييم النظام بالكامل")
+
+if st.button("تشغيل RAGAS Evaluation"):
+
+    with st.spinner("جاري تنفيذ التقييم الكامل..."):
+
+        result = evaluator.ragas_eval(
+            rag_system,
+            EVAL_PATH
+        )
+
+    st.success("تم الانتهاء من التقييم")
+
+    st.write(result)
