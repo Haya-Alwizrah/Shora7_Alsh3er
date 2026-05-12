@@ -12,7 +12,7 @@ GROQ_MODEL = "llama-3.1-8b-instant"
 GROQ_KEY = "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"
 
 DATA_FOLDER = "Dataset"
-EVAL_PATH = "src/eval_data.xlsx"
+EVAL_PATH = "cache/eval_data.xlsx"
 CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
 
