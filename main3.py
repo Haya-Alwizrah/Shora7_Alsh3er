@@ -61,8 +61,8 @@ def load_system():
 rag_system, evaluator = load_system()
 
 question = st.text_input(
-    "اكتب سؤالك عن الشعر الجاهلي:",
-    placeholder="مثال: ما اعراب ودع هريرة ان الرحل مرتحل"
+    "اكتب سؤالك عن احد المعلقات العشر:",
+    placeholder="مثال: ما اعراب ودع هريرة ان الركب مرتحل"
 )
 
 
@@ -83,17 +83,6 @@ if st.button("اسأل"):
         st.write(answer)
 
         # ------------------------------------------------
-        # CONTEXT
-        # ------------------------------------------------
-        with st.expander("📚 النصوص المسترجعة"):
-            if isinstance(context, list):
-                for i, chunk in enumerate(context, 1):
-                    st.markdown(f"### Chunk {i}")
-                    st.write(chunk)
-            else:
-                st.write(context)
-
-        # ------------------------------------------------
         # JUDGE
         # ------------------------------------------------
         with st.spinner("جاري تقييم الإجابة..."):
@@ -110,16 +99,3 @@ if st.button("اسأل"):
 st.divider()
 
 st.subheader("📊 تقييم النظام بالكامل")
-
-if st.button("تشغيل RAGAS Evaluation"):
-
-    with st.spinner("جاري تنفيذ التقييم الكامل..."):
-
-        result = evaluator.ragas_eval(
-            rag_system,
-            EVAL_PATH
-        )
-
-    st.success("تم الانتهاء من التقييم")
-
-    st.write(result)
