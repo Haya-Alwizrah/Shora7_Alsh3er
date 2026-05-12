@@ -2,8 +2,8 @@ EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
 GROQ_MODEL = "llama-3.1-8b-instant"
 GROQ_KEY = "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"
 
-DATA_FOLDER = "datasets"
-CHROMA_PATH = "chroma_db"
+DATA_FOLDER = "Dataset"
+CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
 
 # --------------------------------------------------------
