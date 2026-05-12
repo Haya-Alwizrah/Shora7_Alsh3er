@@ -5,14 +5,15 @@ from chromadb.utils import embedding_functions
 
 class DataManager:
 
-    def __init__(self, folder_path, db_path, collection_name, embed_model):
-        self.folder_path = folder_path
+    def __init__(self, files, db_path, collection_name, embed_model):
+        #self.folder_path = folder_path
         self.embedding_func = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embed_model)
         self.client = chromadb.PersistentClient(path=db_path)
         self.collection_name = collection_name
         self.collection = None
         self.chunks = []
         self.metadatas = []
+        self.files = files
 
     def split_poem_blocks(self, text):
         chunks = re.split(r"\n[-]{10,}\n",text)
@@ -20,11 +21,8 @@ class DataManager:
         return [chunk.strip() for chunk in chunks if chunk.strip()]
 
     def load_files(self):
-        for filename in os.listdir(self.folder_path):
-            if filename.endswith(".txt"):
-                file_path = os.path.join(self.folder_path, filename)
-
-                with open(file_path, "r", encoding="utf-8") as f:
+        for file_path in self.files:
+                with open(file_path , "r", encoding="utf-8") as f:
                     text = f.read()
 
                 chunks = self.split_poem_blocks(text)
@@ -32,9 +30,11 @@ class DataManager:
                 for i, chunk in enumerate(chunks):
                     self.chunks.append(chunk)
                     self.metadatas.append({
-                        "source": filename,
+                        "source": file_path ,
                         "chunk_id": i
                     })
+
+        print(len(self.chunks))
     
     def create_collection(self):
 
@@ -45,6 +45,8 @@ class DataManager:
             name = self.collection_name,
             embedding_function = self.embedding_func
         )
+
+        print("collection created")
 
     def add_documents(self, batch_size=64):
 
