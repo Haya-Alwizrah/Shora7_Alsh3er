@@ -48,7 +48,7 @@ class DataManager:
     def create_collection(self):
         self.collection = self.client.get_or_create_collection(
             name = self.collection_name,
-            embedding_function = self.embedding_func()
+            embedding_function = self.get_embedding_func()
         )
 
         print("collection created")
