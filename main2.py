@@ -3,6 +3,7 @@ GROQ_MODEL = "llama-3.1-8b-instant"
 GROQ_KEY = "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"
 
 DATA_FOLDER = "Dataset"
+EVAL_PATH = "src/eval_data.xlsx"
 CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
 
@@ -47,7 +48,7 @@ evaluator = RAGEvaluator(
     embed_model=EMBED_MODEL
 )
 
-eval_data = evaluator.load_from_excel("eval_data.xlsx")
+eval_data = evaluator.load_from_excel(EVAL_PATH)
 dataset = evaluator.build_dataset(rag_system, eval_data)
 result = evaluator.evaluate(dataset)
 print(result)
