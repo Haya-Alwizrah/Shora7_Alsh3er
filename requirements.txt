@@ -1,0 +1,6 @@
+# Project dependencies
+python-dotenv
+openai
+neo4j
+sentence-transformers
+torch
