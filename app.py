@@ -10,6 +10,7 @@ from src.DataManager import DataManager
 from src.RAGSystem import RAGSystem
 from src.RagGraph import GraphRag
 from src.RAGEvaluationSystem import RAGEvaluationSystem
+import streamlit.components.v1 as components
 
 load_dotenv()
 
@@ -173,62 +174,49 @@ hr { border:none !important; border-top:0.5px solid #E2D9C4 !important; margin:2
 # Knowledge Graph SVG
 KG_SVG = """
 <div class="content-card">
-  <h3>قاعدة البيانات المعرفية — Neo4j Knowledge Graph</h3>
-  <p class="sub">1,289 عقدة · 1,023 علاقة · خاصيتان: <code>embedding</code> و <code>text</code></p>
-  <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
-    <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3A2C20">
-      <span style="width:10px;height:10px;border-radius:50%;background:#534AB7;display:inline-block"></span>Verse (250)
-    </span>
-    <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3A2C20">
-      <span style="width:10px;height:10px;border-radius:50%;background:#0F6E56;display:inline-block"></span>Meaning (250)
-    </span>
-    <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3A2C20">
-      <span style="width:10px;height:10px;border-radius:50%;background:#854F0B;display:inline-block"></span>Grammar (250)
-    </span>
-    <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3A2C20">
-      <span style="width:10px;height:10px;border-radius:50%;background:#185FA5;display:inline-block"></span>Vocabulary (250)
-    </span>
-    <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3A2C20">
-      <span style="width:10px;height:10px;border-radius:50%;background:#888;display:inline-block"></span>أخرى (289)
-    </span>
-  </div>
-  <svg width="100%" viewBox="0 0 680 200" style="font-family:'IBM Plex Sans Arabic',sans-serif">
+  <h3>هيكلية البيانات المترابطة (Graph Schema)</h3>
+  <p class="sub">تمثيل علاقة البيت الواحد بالعناصر النحوية والدلالية في Neo4j</p>
+  <svg width="100%" viewBox="0 0 680 220" style="font-family:'IBM Plex Sans Arabic',sans-serif">
     <defs>
-      <marker id="arkg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#9A8F78" />
       </marker>
     </defs>
-    <rect width="680" height="200" rx="10" fill="#FAFAF7"/>
-    <line x1="130" y1="88" x2="235" y2="65" stroke="#534AB7" stroke-width="1.2" stroke-opacity="0.5" marker-end="url(#arkg)" fill="none"/>
-    <line x1="130" y1="112" x2="235" y2="138" stroke="#534AB7" stroke-width="1" stroke-opacity="0.4" marker-end="url(#arkg)" fill="none"/>
-    <line x1="298" y1="60" x2="400" y2="80" stroke="#0F6E56" stroke-width="1" stroke-opacity="0.45" marker-end="url(#arkg)" fill="none"/>
-    <line x1="298" y1="143" x2="400" y2="118" stroke="#854F0B" stroke-width="1" stroke-opacity="0.4" marker-end="url(#arkg)" fill="none"/>
-    <line x1="465" y1="88" x2="545" y2="96" stroke="#185FA5" stroke-width="0.8" stroke-opacity="0.35" marker-end="url(#arkg)" fill="none"/>
-    <text x="182" y="63" text-anchor="middle" font-size="9" fill="#9A8F78" font-family="IBM Plex Sans Arabic">HAS_MEANING</text>
-    <text x="182" y="140" text-anchor="middle" font-size="9" fill="#9A8F78" font-family="IBM Plex Sans Arabic">HAS_GRAMMAR</text>
-    <text x="350" y="84" text-anchor="middle" font-size="9" fill="#9A8F78" font-family="IBM Plex Sans Arabic">HAS_VOCABULARY</text>
-    <circle cx="90" cy="100" r="40" fill="#EDE8F5" stroke="#534AB7" stroke-width="1.5"/>
-    <text x="90" y="95" text-anchor="middle" font-size="12" fill="#26215C" font-weight="600" font-family="IBM Plex Sans Arabic">Verse</text>
-    <text x="90" y="110" text-anchor="middle" font-size="10" fill="#534AB7" font-family="IBM Plex Sans Arabic">250 عقدة</text>
-    <circle cx="268" cy="58" r="32" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.5"/>
-    <text x="268" y="53" text-anchor="middle" font-size="11" fill="#04342C" font-weight="600" font-family="IBM Plex Sans Arabic">Meaning</text>
-    <text x="268" y="68" text-anchor="middle" font-size="10" fill="#0F6E56" font-family="IBM Plex Sans Arabic">250 عقدة</text>
-    <circle cx="268" cy="148" r="32" fill="#FAEEDA" stroke="#854F0B" stroke-width="1.5"/>
-    <text x="268" y="143" text-anchor="middle" font-size="11" fill="#412402" font-weight="600" font-family="IBM Plex Sans Arabic">Grammar</text>
-    <text x="268" y="158" text-anchor="middle" font-size="10" fill="#854F0B" font-family="IBM Plex Sans Arabic">250 عقدة</text>
-    <circle cx="435" cy="100" r="34" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.5"/>
-    <text x="435" y="95" text-anchor="middle" font-size="10.5" fill="#042C53" font-weight="600" font-family="IBM Plex Sans Arabic">Vocabulary</text>
-    <text x="435" y="110" text-anchor="middle" font-size="10" fill="#185FA5" font-family="IBM Plex Sans Arabic">250 عقدة</text>
-    <circle cx="575" cy="100" r="24" fill="#F1EFE8" stroke="#888780" stroke-width="1"/>
-    <text x="575" y="96" text-anchor="middle" font-size="10" fill="#444441" font-family="IBM Plex Sans Arabic">أخرى</text>
-    <text x="575" y="110" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="IBM Plex Sans Arabic">289</text>
-    <text x="340" y="190" text-anchor="middle" font-size="9.5" fill="#B0A898" font-family="IBM Plex Sans Arabic">
-      إجمالي العلاقات: 1,023 · HAS_MEANING · HAS_GRAMMAR · HAS_VOCABULARY
-    </text>
+    <rect width="680" height="220" rx="12" fill="#FAFAF7"/>
+    
+    <line x1="340" y1="110" x2="160" y2="60" stroke="#9A8F78" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrowhead)"/>
+    <line x1="340" y1="110" x2="160" y2="160" stroke="#9A8F78" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrowhead)"/>
+    <line x1="340" y1="110" x2="520" y2="110" stroke="#9A8F78" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrowhead)"/>
+
+    <text x="240" y="75" text-anchor="middle" font-size="10" fill="#8A7D65" font-weight="600">HAS_MEANING</text>
+    <text x="240" y="150" text-anchor="middle" font-size="10" fill="#8A7D65" font-weight="600">HAS_GRAMMAR</text>
+    <text x="440" y="100" text-anchor="middle" font-size="10" fill="#8A7D65" font-weight="600">HAS_VOCABULARY</text>
+
+    <circle cx="340" cy="110" r="45" fill="#EDE8F5" stroke="#534AB7" stroke-width="2.5"/>
+    <text x="340" y="105" text-anchor="middle" font-size="14" fill="#26215C" font-weight="700">Verse</text>
+    <text x="340" y="122" text-anchor="middle" font-size="10" fill="#534AB7">بيت شعري</text>
+
+    <circle cx="120" cy="60" r="35" fill="#E1F5EE" stroke="#0F6E56" stroke-width="2"/>
+    <text x="120" y="55" text-anchor="middle" font-size="12" fill="#04342C" font-weight="600">Meaning</text>
+    <text x="120" y="70" text-anchor="middle" font-size="9" fill="#0F6E56">شرح المعنى</text>
+
+    <circle cx="120" cy="160" r="35" fill="#FAEEDA" stroke="#854F0B" stroke-width="2"/>
+    <text x="120" y="155" text-anchor="middle" font-size="12" fill="#412402" font-weight="600">Grammar</text>
+    <text x="120" y="170" text-anchor="middle" font-size="9" fill="#854F0B">التحليل النحوي</text>
+
+    <circle cx="560" cy="110" r="35" fill="#E6F1FB" stroke="#185FA5" stroke-width="2"/>
+    <text x="560" y="105" text-anchor="middle" font-size="11" fill="#042C53" font-weight="600">Vocabulary</text>
+    <text x="560" y="120" text-anchor="middle" font-size="9" fill="#185FA5">قاموس الكلمات</text>
+
+    <circle cx="620" cy="40" r="12" fill="#F1EFE8" stroke="#888" stroke-width="1" opacity="0.6"/>
+    <circle cx="640" cy="180" r="10" fill="#F1EFE8" stroke="#888" stroke-width="1" opacity="0.6"/>
+    <circle cx="50" cy="110" r="8" fill="#F1EFE8" stroke="#888" stroke-width="1" opacity="0.6"/>
   </svg>
+  <div style="text-align:center; margin-top:10px; font-size:11px; color:#9A8F78;">
+    * كل بيت شعري مرتبط بخصائصه الثلاث لضمان استرجاع سياق كامل في Graph RAG.
+  </div>
 </div>
 """
-
 COMPARE_HTML = """
 <div class="content-card">
   <h3>المقارنة بين النظامين</h3>
@@ -341,7 +329,10 @@ if menu == "🏠  الرئيسية":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(KG_SVG, unsafe_allow_html=True)
+    # st.markdown(KG_SVG, unsafe_allow_html=True)
+    # st.markdown(COMPARE_HTML, unsafe_allow_html=True)
+    components.html(KG_SVG, height=500)
+
     st.markdown(COMPARE_HTML, unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
