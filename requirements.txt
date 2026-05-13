@@ -1,6 +1,17 @@
 # Project dependencies
+streamlit
+pandas
 python-dotenv
 openai
 neo4j
 sentence-transformers
+chromadb
+groq
+ragas
+datasets
+langchain-openai
+langchain-groq
+langchain-huggingface
+openpyxl
 torch
+torchvision

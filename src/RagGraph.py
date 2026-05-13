@@ -10,16 +10,13 @@ load_dotenv(".env")
 
 class GraphRag:
     def __init__(self):
-        self.client = OpenAI(
-        #     base_url="https://openrouter.ai/api/v1",
-        #     api_key=os.getenv("OPENROUTER_API_KEY")
-        # )
-        api_key=os.getenv("OPENAI_API_KEY")
-        )
-        self.model_name ="gpt-4o-mini"
-
+        # self.model_name ="gpt-4o-mini"
         # self.model_name = "qwen/qwen3-next-80b-a3b-instruct:free"
-        self.model_emb = SentenceTransformer("Sarah0001/Arabic_embed_model")
+        # self.model_emb = SentenceTransformer("Sarah0001/Arabic_embed_model")
+        
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.model_emb = SentenceTransformer(os.getenv("EMBEDDING_MODEL"))
         
         self.uri = os.getenv("NEO4J_URI")
         self.user = os.getenv("NEO4J_USERNAME")
@@ -37,9 +34,14 @@ class GraphRag:
         
         cypher_query = """
         CALL db.index.vector.queryNodes('verse_vector', $k, $queryVector)
-        YIELD node, score
-        RETURN node.text AS verse, node.meaning AS meaning, 
-               node.grammar AS grammar, node.vocabulary AS vocab
+        YIELD node AS v, score
+        OPTIONAL MATCH (v)-[:HAS_MEANING]->(m:Meaning)
+        OPTIONAL MATCH (v)-[:HAS_GRAMMAR]->(g:Grammar)
+        OPTIONAL MATCH (v)-[:HAS_VOCABULARY]->(vo:Vocabulary)
+        RETURN v.text AS verse, 
+               m.text AS meaning, 
+               g.text AS grammar, 
+               vo.text AS vocab
         """
         
         context_parts = []
@@ -54,12 +56,16 @@ class GraphRag:
                     f"---"
                 )
         return "\n".join(context_parts)
-
-    def generate_answer(self, query):
+    
+    def ask(self, query):
         context = self.search_graph(query)
-
         if not context:
-            return "No relevant information found in the database."
+            return "I couldn't find related information in the database.", ""
+        
+        answer = self.generate_answer(query, context)
+        return answer, context
+
+    def generate_answer(self, query,context):
 
         system_prompt = "You are an expert in Arabic poetry and Mu'allaqat. Answer based only on the provided context."
         user_prompt = f"""Context:

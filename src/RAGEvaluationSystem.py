@@ -1,30 +1,40 @@
 import pandas as pd
 from datasets import Dataset
 
-from groq import Groq
+# from groq import Groq
 
 from ragas import evaluate
 from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall
-from langchain_groq import ChatGroq
+# from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+
+load_dotenv(".env")
+
 
 class RAGEvaluationSystem:
-    def __init__(self, groq_key, model_name, embed_model):
+
+    def __init__(self, openai_key=None, model_name=None, embed_model=None):
         
-        # RAGAS:
-        self.evaluator_llm = ChatGroq(
-            groq_api_key=groq_key,
-            model_name=model_name,
+        self.api_key = openai_key or os.getenv("OPENAI_API_KEY")
+        self.model_name = model_name or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.embed_model_name = embed_model or os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
+
+        self.evaluator_llm = ChatOpenAI(
+            openai_api_key=self.api_key,
+            model=self.model_name,
             temperature=0,
-            max_tokens=1024,
+            max_tokens=2500,
             n=1
         )
 
-        self.embeddings = HuggingFaceEmbeddings(model_name=embed_model)
-
         # LLM Judge:
-        self.client = Groq(api_key=groq_key)
-        self.model_name = model_name
+        self.embeddings = HuggingFaceEmbeddings(model_name=self.embed_model_name)
+        self.client = OpenAI(api_key=self.api_key)        
 
 # ----------------------------------------------------------------------------------------
     def load_from_excel(self, file_path):
