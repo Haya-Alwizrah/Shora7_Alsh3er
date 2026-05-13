@@ -11,7 +11,7 @@ The system follows a strict data lifecycle from raw document extraction to final
 
 ```mermaid
 graph TD
-    A[Source: Fat'h al-Kabir al-Muta'al PDF/Images] --> B[Phase 1: OCR Extraction - MistralAI/Qara]
+    A[Source: فتح الكبير المتعال(اعراب المعلقات العشر) PDF/Images] --> B[Phase 1: OCR Extraction - MistralAI/Qara]
     B --> C[Text Splitting & Cleaning - Regex]
     C --> D[Phase 2: Embedding - Arabic Matryoshka Model]
     D --> E1[Standard RAG Path: Vector Storage - ChromaDB]
@@ -43,12 +43,17 @@ Currently, the system covers a curated dataset of 3 major pre-Islamic Mu'allaqat
 
 ## 📊 Evaluation Metrics
 
-Using the **RAGAS** framework, we evaluate both systems based on:
+### 1. RAGAS Framework (Statistical Metrics)
 
-* **Faithfulness:** Ensures the AI doesn't hallucinate facts outside the poetry context.
-* **Answer Relevancy:** Measures how directly the AI answers the user's linguistic query.
-* **Context Precision/Recall:** Evaluates the search engines' ability to retrieve complete parsing data.
+* **Faithfulness:** Detects hallucinations by checking if the answer is grounded in the retrieved verse.
+* **Answer Relevancy:** Measures how well the response addresses the specific linguistic or historical query.
+* **Context Precision/Recall:** Evaluates the efficiency of both Neo4j and ChromaDB in retrieving relevant parsing data.
 
+### 2. LLM as a Judge (Qualitative Analysis)
+
+* **Expert Peer Review:** A secondary `gpt-4o-mini` instance acts as a "Linguistic Judge".
+* **Scoring (1-100):** Evaluates responses based on **Accuracy**, **Context Adherence**, and **Linguistic Nuance**.
+* **Comparison:** Provides a direct percentage-based comparison between Standard RAG and GraphRAG performance on complex samples.
 ## 🚀 Getting Started
 
 1. Install dependencies: `pip install -r requirements.txt`
@@ -56,4 +61,3 @@ Using the **RAGAS** framework, we evaluate both systems based on:
 3. Run the dashboard: `streamlit run app.py`
 
 ---
-

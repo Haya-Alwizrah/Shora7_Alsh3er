@@ -265,7 +265,7 @@ class PoetryPipeline:
                     self.insert_graph(item)
 
                     print(
-                        f" تم حفظ البيت: "
+                        f" save successfully "
                         f"{item['verse'][:40]}..."
                     )
 

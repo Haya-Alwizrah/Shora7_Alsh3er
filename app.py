@@ -23,7 +23,6 @@ CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
 EVAL_PATH = "cache/eval_data.xlsx"
 
-# اعدادات الصفحه 
 st.set_page_config(
     page_title="شُرّاح الشعر",
     page_icon="📜",
@@ -171,7 +170,7 @@ hr { border:none !important; border-top:0.5px solid #E2D9C4 !important; margin:2
 </style>
 """, unsafe_allow_html=True)
 
-# Knowledge Graph SVG
+# Knowledge Graph 
 KG_SVG = """
 <div class="content-card">
   <h3>هيكلية البيانات المترابطة (Graph Schema)</h3>
@@ -242,7 +241,6 @@ COMPARE_HTML = """
 </div>
 """
 
-# تهيئة الأنظمة
 @st.cache_resource
 def init_systems():
     dm = DataManager(DATA_FOLDER, CHROMA_PATH, COLLECTION_NAME, EMBED_MODEL)
@@ -263,7 +261,7 @@ except Exception as e:
 if "evaluation_results" not in st.session_state:
     st.session_state.evaluation_results = None
 
-# القائمة الجانبية
+#القائمة الجانبية
 st.sidebar.markdown("""
 <div style='text-align:center;padding:6px 0 18px;border-bottom:0.5px solid rgba(255,255,255,0.12);margin-bottom:12px'>
   <div style='font-size:30px;margin-bottom:4px'>📜</div>
@@ -472,8 +470,8 @@ elif menu == "◎  البحث التقليدي":
             st.markdown('<div class="content-card">', unsafe_allow_html=True)
             st.chat_message("assistant").write(ans)
             st.markdown('</div>', unsafe_allow_html=True)
-            with st.expander("📚 المصادر المسترجعة"):
-                st.write(ctx)
+            # with st.expander("📚 المصادر المسترجعة"):
+            #     st.write(ctx)
 
 
 # البحث المعرفي
@@ -511,22 +509,106 @@ elif menu == "⬡  البحث المعرفي":
             st.markdown('<div class="content-card">', unsafe_allow_html=True)
             st.chat_message("assistant").write(ans)
             st.markdown('</div>', unsafe_allow_html=True)
-            with st.expander("📚 البيانات المسترجعة من النود"):
-                st.success(ctx)
+            # with st.expander("📚 البيانات المسترجعة من النود"):
+            #     st.success(ctx)
 
 
 # التقييم
+# elif menu == "◈  التقييم":
+
+#     st.markdown("""
+#     <div class="shurah-header">
+#       <div>
+#         <h1>لوحة التقييم</h1>
+#         <p>مقارنة أداء Standard RAG و Graph RAG بمقاييس RAGAS</p>
+#       </div>
+#       <span style="font-size:30px">◈</span>
+#     </div>
+
+#     <div class="content-card">
+#       <h3>مقاييس RAGAS المستخدمة</h3>
+#       <p class="sub">أربعة مقاييس لتقييم جودة الاسترجاع والإجابة</p>
+#       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+#         <div style="padding:10px 14px;background:#F9F6EE;border-radius:8px;border:0.5px solid #E2D9C4">
+#           <div style="font-size:12px;font-weight:600;color:#1A1208">Faithfulness</div>
+#           <div style="font-size:11px;color:#6A6050;margin-top:2px">مدى وفاء الإجابة للسياق المسترجع</div>
+#         </div>
+#         <div style="padding:10px 14px;background:#F9F6EE;border-radius:8px;border:0.5px solid #E2D9C4">
+#           <div style="font-size:12px;font-weight:600;color:#1A1208">Answer Relevancy</div>
+#           <div style="font-size:11px;color:#6A6050;margin-top:2px">مدى صلة الإجابة بالسؤال المطروح</div>
+#         </div>
+#         <div style="padding:10px 14px;background:#F9F6EE;border-radius:8px;border:0.5px solid #E2D9C4">
+#           <div style="font-size:12px;font-weight:600;color:#1A1208">Context Precision</div>
+#           <div style="font-size:11px;color:#6A6050;margin-top:2px">دقة السياق المسترجع وملاءمته</div>
+#         </div>
+#         <div style="padding:10px 14px;background:#F9F6EE;border-radius:8px;border:0.5px solid #E2D9C4">
+#           <div style="font-size:12px;font-weight:600;color:#1A1208">Context Recall</div>
+#           <div style="font-size:11px;color:#6A6050;margin-top:2px">استرجاع السياق الكافي للإجابة</div>
+#         </div>
+#       </div>
+#     </div>
+#     """, unsafe_allow_html=True)
+
+    # if st.button("🚀  بدء التقييم"):
+    #     with st.spinner("جاري حساب النتائج... قد يستغرق بضع دقائق"):
+    #         try:
+    #             res_std_obj   = eval_sys.ragas_eval(std_rag, EVAL_PATH)
+    #             res_graph_obj = eval_sys.ragas_eval(g_rag,   EVAL_PATH)
+
+    #             metrics = [
+    #                 "faithfulness",
+    #                 "answer_relevancy",
+    #                 "context_precision",
+    #                 "context_recall"
+    #             ]
+
+    #             def get_average(scores):
+    #                 if not scores:
+    #                     return 0
+    #                 return round(sum(scores) / len(scores), 3)
+
+    #             comparison_data = {
+    #                 "المقياس": [m.replace('_', ' ').title() for m in metrics],
+    #                 "Standard RAG": [get_average(res_std_obj[m]) for m in metrics],
+    #                 "Graph RAG":    [get_average(res_graph_obj[m]) for m in metrics]
+    #             }
+
+    #             st.session_state.evaluation_results = pd.DataFrame(comparison_data)
+    #             st.success("✅ تم التقييم بنجاح!")
+
+    #         except Exception as e:
+    #             st.error(f"حدث خطأ: {e}")
+
+    # if st.session_state.evaluation_results is not None:
+    #     st.markdown('<div class="content-card"><h3>📈 نتائج المقارنة</h3>', unsafe_allow_html=True)
+    #     st.table(st.session_state.evaluation_results)
+    #     st.bar_chart(st.session_state.evaluation_results.set_index("المقياس"))
+    #     st.markdown('</div>', unsafe_allow_html=True)
+
+    #     csv = st.session_state.evaluation_results.to_csv(index=False).encode('utf-8-sig')
+    #     st.download_button(
+    #         "⬇️  تحميل النتائج CSV",
+    #         data=csv,
+    #         file_name='evaluation_results.csv'
+    #     )
+    # else:
+    #     st.info("اضغط على 'بدء التقييم' لمقارنة أداء النظامين.")
+    # التقييم
+
+# التقييم 
 elif menu == "◈  التقييم":
 
     st.markdown("""
     <div class="shurah-header">
       <div>
-        <h1>لوحة التقييم</h1>
-        <p>مقارنة أداء Standard RAG و Graph RAG بمقاييس RAGAS</p>
+        <h1>لوحة التقييم والتحكيم الذكي</h1>
+        <p>مقارنة أداء Standard RAG و Graph RAG بمقاييس RAGAS والتحكيم الآلي</p>
       </div>
       <span style="font-size:30px">◈</span>
     </div>
+    """, unsafe_allow_html=True)
 
+    st.markdown("""
     <div class="content-card">
       <h3>مقاييس RAGAS المستخدمة</h3>
       <p class="sub">أربعة مقاييس لتقييم جودة الاسترجاع والإجابة</p>
@@ -551,22 +633,18 @@ elif menu == "◈  التقييم":
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🚀  بدء التقييم"):
-        with st.spinner("جاري حساب النتائج... قد يستغرق بضع دقائق"):
+    # RAGAS 
+    st.subheader("1️⃣ RAGAS")
+    if st.button("🚀 بدء تقييم RAGAS الكامل"):
+        with st.spinner("جاري حساب المقاييس... قد يستغرق ذلك وقتاً"):
             try:
                 res_std_obj   = eval_sys.ragas_eval(std_rag, EVAL_PATH)
                 res_graph_obj = eval_sys.ragas_eval(g_rag,   EVAL_PATH)
 
-                metrics = [
-                    "faithfulness",
-                    "answer_relevancy",
-                    "context_precision",
-                    "context_recall"
-                ]
+                metrics = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
 
                 def get_average(scores):
-                    if not scores:
-                        return 0
+                    if not scores: return 0
                     return round(sum(scores) / len(scores), 3)
 
                 comparison_data = {
@@ -576,22 +654,49 @@ elif menu == "◈  التقييم":
                 }
 
                 st.session_state.evaluation_results = pd.DataFrame(comparison_data)
-                st.success("✅ تم التقييم بنجاح!")
-
+                st.success("✅ تم التقييم الإحصائي بنجاح!")
             except Exception as e:
-                st.error(f"حدث خطأ: {e}")
+                st.error(f"حدث خطأ في RAGAS: {e}")
 
+    # RAGAS 
     if st.session_state.evaluation_results is not None:
-        st.markdown('<div class="content-card"><h3>📈 نتائج المقارنة</h3>', unsafe_allow_html=True)
+        st.markdown('<div class="content-card"><h3>📈 نتائج المقارنة الإحصائية</h3>', unsafe_allow_html=True)
         st.table(st.session_state.evaluation_results)
         st.bar_chart(st.session_state.evaluation_results.set_index("المقياس"))
         st.markdown('</div>', unsafe_allow_html=True)
 
-        csv = st.session_state.evaluation_results.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            "⬇️  تحميل النتائج CSV",
-            data=csv,
-            file_name='evaluation_results.csv'
-        )
-    else:
-        st.info("اضغط على 'بدء التقييم' لمقارنة أداء النظامين.")
+    st.divider()
+
+    #  LLM Judge 
+    st.subheader("2️⃣ LLM as a Judge")
+    st.info("سيقوم القاضي الآلي بتقييم عينة من 5 أسئلة من ملف البيانات ومقارنة دقة النظامين.")
+
+    if st.button("⚖️ تشغيل القاضي الذكي (5 عينات)"):
+        try:
+            df_eval = pd.read_excel(EVAL_PATH).head(5)
+            judge_results = []
+
+            with st.spinner("جاري التحكيم بواسطة GPT-4o mini..."):
+                for idx, row in df_eval.iterrows():
+                    question = row['question']
+                    
+                    # استخراج الإجابات والسياق
+                    ans_std, ctx_std = std_rag.ask(question)
+                    ans_graph, ctx_graph = g_rag.ask(question)
+                    
+                    # استدعاء دالة الحكم
+                    res_judge_std = eval_sys.judge(question, ans_std, ctx_std)
+                    res_judge_graph = eval_sys.judge(question, ans_graph, ctx_graph)
+                    
+                    judge_results.append({
+                        "السؤال": question[:50] + "...",
+                        "تقييم Standard": res_judge_std,
+                        "تقييم Graph": res_judge_graph
+                    })
+
+            st.write("### 📈 نتائج القاضي الذكي:")
+            st.table(pd.DataFrame(judge_results))
+            st.success("✅ اكتملت عملية التحكيم!")
+            
+        except Exception as e:
+            st.error(f"حدث خطأ أثناء تشغيل القاضي: {e}")
