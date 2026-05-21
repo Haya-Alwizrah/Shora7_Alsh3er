@@ -38,8 +38,8 @@ class DataManager:
 
             self.chunks.append(chunk)
             self.metadatas.append({
-                    "الشاعر": {row['الشاعر']},
-                    "رقم البيت": {row['رقم البيت']}
+                    "الشاعر": row['الشاعر'],
+                    "رقم البيت": row['رقم البيت']
                 })
             
         print(f"Total chunks loaded: {len(self.chunks)}")
@@ -65,7 +65,7 @@ class DataManager:
         for i in range(0, len(self.chunks), batch_size):
             batch_chunks = self.chunks[i:i+batch_size]
             batch_metadatas = self.metadatas[i:i+batch_size]
-            batch_ids = [f"{m['source']}_{m['chunk_id']}" for m in batch_metadatas]
+            batch_ids = [f"{m['الشاعر']}_{m['رقم البيت']}" for m in batch_metadatas]
 
             self.collection.add(
                 documents=batch_chunks,
