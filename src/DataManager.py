@@ -1,20 +1,17 @@
 import os
-import re
+import pandas as pd
 import chromadb
 from chromadb.utils import embedding_functions
 
 
 class DataManager:
-    def __init__(self, data_source, db_path, collection_name, EMBEDDING_MODEL):
+    def __init__(self, excel_path, db_path, collection_name, EMBEDDING_MODEL):
 
         self.client = chromadb.PersistentClient(path=db_path)
         self.collection_name = collection_name
         self.embed_model = EMBEDDING_MODEL
         
-        if isinstance(data_source, str) and os.path.isdir(data_source):
-            self.files = [os.path.join(data_source, f) for f in os.listdir(data_source) if f.endswith('.txt')]
-        else:
-            self.files = data_source
+        self.excel_path = excel_path
 
         self.chunks = []
         self.metadatas = []
@@ -28,31 +25,23 @@ class DataManager:
             )
         return self.embedding_func
     
-    def split_poem_blocks(self, text):
-        chunks = re.split(r"\n[-]{10,}\n", text)
-        return [chunk.strip() for chunk in chunks if chunk.strip()]
-
     def load_files(self):
-        if not self.files:
-            print("Warning: No files found to load.")
-            return
+        df = pd.read_excel(self.excel_path)
 
-        for file_path in self.files:
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    text = f.read()
+        for idx, row in df.iterrows():
+            chunk = f"""
+البيت: {row['البيت']}
+المفردات: {row['المفردات']}
+المعنى: {row['المعنى']}
+الاعراب: {row['الاعراب']}
+"""
 
-                chunks = self.split_poem_blocks(text)
-
-                for i, chunk in enumerate(chunks):
-                    self.chunks.append(chunk)
-                    self.metadatas.append({
-                        "source": os.path.basename(file_path),
-                        "chunk_id": i
-                    })
-            except Exception as e:
-                print(f"Error loading {file_path}: {e}")
-
+            self.chunks.append(chunk)
+            self.metadatas.append({
+                    "الشاعر": {row['الشاعر']},
+                    "رقم البيت": {row['رقم البيت']}
+                })
+            
         print(f"Total chunks loaded: {len(self.chunks)}")
     
     def create_collection(self):
