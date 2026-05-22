@@ -1,6 +1,4 @@
 import os
-import torch
-import re
 from dotenv import load_dotenv
 from openai import OpenAI
 from neo4j import GraphDatabase
@@ -8,85 +6,212 @@ from sentence_transformers import SentenceTransformer
 
 load_dotenv(".env")
 
-class GraphRag:
-    def __init__(self):
-        # self.model_name ="gpt-4o-mini"
-        # self.model_name = "qwen/qwen3-next-80b-a3b-instruct:free"
-        # self.model_emb = SentenceTransformer("Sarah0001/Arabic_embed_model")
-        
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        self.model_emb = SentenceTransformer(os.getenv("EMBEDDING_MODEL"))
-        
-        self.uri = os.getenv("NEO4J_URI")
-        self.user = os.getenv("NEO4J_USERNAME")
-        self.password = os.getenv("NEO4J_PASSWORD")
-        self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
 
-    def close(self):
-        self.driver.close()
+class GraphRag:
+
+    def __init__(self):
+
+        self.client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY")
+        )
+
+        self.model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+        self.model_emb = SentenceTransformer(
+            os.getenv("EMBEDDING_MODEL")
+        )
+
+        self.driver = GraphDatabase.driver(
+            os.getenv("NEO4J_URI"),
+            auth=(os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"))
+        )
+
 
     def _embed_query(self, query):
         return self.model_emb.encode(query).tolist()
 
-    def search_graph(self, query_text, k=2):
-        query_vector = self._embed_query(query_text)
-        
-        cypher_query = """
-        CALL db.index.vector.queryNodes('verse_vector', $k, $queryVector)
-        YIELD node AS v, score
-        OPTIONAL MATCH (v)-[:HAS_MEANING]->(m:Meaning)
-        OPTIONAL MATCH (v)-[:HAS_GRAMMAR]->(g:Grammar)
-        OPTIONAL MATCH (v)-[:HAS_VOCABULARY]->(vo:Vocabulary)
-        RETURN v.text AS verse, 
-               m.text AS meaning, 
-               g.text AS grammar, 
-               vo.text AS vocab
+
+    # 1. VECTOR SEARCH
+    def vector_search(self, query, k=2):
+
+        query_vector = self._embed_query(query)
+
+        cypher = """
+        CALL db.index.vector.queryNodes('verse_vector', $k, $vector)
+        YIELD node, score
+        RETURN node, score
         """
-        
-        context_parts = []
+
+        results = []
+
         with self.driver.session() as session:
-            result = session.run(cypher_query, queryVector=query_vector, k=k)
-            for record in result:
-                context_parts.append(
-                    f"Verse: {record['verse']}\n"
-                    f"Meaning: {record['meaning']}\n"
-                    f"Grammar: {record['grammar']}\n"
-                    f"Vocabulary: {record['vocab']}\n"
-                    f"---"
-                )
-        return "\n".join(context_parts)
-    
+
+            rows = session.run(cypher, vector=query_vector, k=k)
+
+            for r in rows:
+                node = r["node"]
+
+                results.append({
+                    "text": node.get("text", ""),
+                    "score": r["score"],
+                    "source": "vector"
+                })
+
+        return results
+
+    # 2. FULL TEXT SEARCH
+    def keyword_search(self, query, k=2):
+
+        cypher = """
+        CALL db.index.fulltext.queryNodes('verse_text', $query)
+        YIELD node, score
+        RETURN node, score
+        LIMIT $k
+        """
+
+        results = []
+
+        with self.driver.session() as session:
+
+            rows = session.run(cypher, query=query, k=k)
+
+            for r in rows:
+
+                node = r["node"]
+
+                results.append({
+                    "text": node.get("text", ""),
+                    "score": r["score"],
+                    "source": "keyword"
+                })
+
+        return results
+
+    # 3. GRAPH EXPANSION
+    def graph_search(self, query, k=2):
+
+        cypher = """
+        MATCH (v:Verse)
+        WHERE v.text CONTAINS $query
+        OPTIONAL MATCH (v)-[:HAS_MEANING]->(m)
+        OPTIONAL MATCH (v)-[:HAS_VOCABULARY]->(vo)
+        OPTIONAL MATCH (v)-[:HAS_GRAMMAR]->(g)
+        RETURN v.text AS verse,
+               m.text AS meaning,
+               vo.text AS vocab,
+               g.text AS grammar
+        LIMIT $k
+        """
+
+        results = []
+
+        with self.driver.session() as session:
+
+            rows = session.run(cypher, query=query, k=k)
+
+            for r in rows:
+
+                results.append({
+                    "text": f"""
+                    Verse: {r['verse']}
+                    Meaning: {r['meaning']}
+                    Vocabulary: {r['vocab']}
+                    Grammar: {r['grammar']}
+                    """.strip(),
+                    "source": "graph"
+                })
+
+        return results
+
+    # 4. HYBRID MERGE
+    def hybrid_search(self, query, k=2):
+
+        vector_results = self.vector_search(query, k)
+        keyword_results = self.keyword_search(query, k)
+        graph_results = self.graph_search(query, k)
+
+        all_results = vector_results + keyword_results + graph_results
+
+        # reranking 
+        def weight(r):
+
+            base = float(r["score"])
+
+            if r["source"] == "vector":
+                return base * 1.0
+            elif r["source"] == "keyword":
+                return base * 1.2
+            else:
+                return base * 1.1
+
+        ranked = sorted(all_results, key=weight, reverse=True)
+
+        return ranked[:k]
+
+    # SEARCH CONTEXT
+    def search_graph(self, query):
+
+        results = self.hybrid_search(query, k=3)
+
+        context = "\n\n---\n\n".join(
+            [r["text"] for r in results]
+        )
+
+        return context
+
+    def generate_answer(self, query, context):
+
+        system_prompt = """
+            أنت خبير في الشعر العربي (المعلقات).
+            أجب فقط من السياق المقدم.
+            إذا لا يوجد جواب قل: لا أعلم.
+            """
+
+        user_prompt = f"""
+            Context:
+            {context}
+
+            Question:
+            {query}
+
+            Answer in clear Arabic:
+            """
+
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.2
+        )
+
+        return response.choices[0].message.content
+
+
     def ask(self, query):
+
         context = self.search_graph(query)
+
         if not context:
-            return "I couldn't find related information in the database.", ""
-        
+            return "لا توجد بيانات", ""
+
         answer = self.generate_answer(query, context)
+
         return answer, context
 
-    def generate_answer(self, query,context):
+    def close(self):
+        self.driver.close()
 
-        system_prompt = "You are an expert in Arabic poetry and Mu'allaqat. Answer based only on the provided context."
-        user_prompt = f"""Context:
-        {context}
-
-        Question: {query}
-        Answer:"""
-
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.3
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"Error: {e}"
 
 if __name__ == "__main__":
+
     rag = GraphRag()
+
+    q = "ما معنى بيت عنترة في الشجاعة؟"
+
+    answer, context = rag.ask(q)
+
+    print(answer)
+
     rag.close()

@@ -1,27 +1,17 @@
-import re
-import json
-import os
-
-from dotenv import load_dotenv
-from openai import OpenAI
+from datasets import load_dataset
 from neo4j import GraphDatabase
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+
+import os
+import json
 
 
 class PoetryPipeline:
 
-    def __init__(self, files):
+    def __init__(self):
 
         load_dotenv()
-
-        self.files = files
-
-        self.client = OpenAI(
-            api_key=os.getenv("OPENAI_API_KEY")
-        )
-
-        self.model_name = "gpt-4o-mini"
-
 
         self.driver = GraphDatabase.driver(
             os.getenv("NEO4J_URI"),
@@ -31,160 +21,19 @@ class PoetryPipeline:
             )
         )
 
+        # Arabic embedding model
+        self.embedding_model = SentenceTransformer(SentenceTransformer(os.getenv("EMBEDDING_MODEL")))
 
-        self.embedding_model = SentenceTransformer(
-            "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
+        # Load dataset from HuggingFace
+        self.dataset = load_dataset(
+            "SarahALo/The-Ten-Muallaqat-Dataset"
         )
 
-        self.cache_file = "cache.json"
-
-        if os.path.exists(self.cache_file):
-
-            with open(self.cache_file, "r", encoding="utf-8") as f:
-                self.cache = json.load(f)
-
-        else:
-            self.cache = {}
-
-        self.prompt_template = """
-أنت محلل متخصص في الشعر العربي.
-
-سيصلك نص يحتوي على:
-
-1- بيت شعري واحد فقط
-2- قسم المفردات
-3- قسم المعنى
-4- قسم الإعراب
-
-المطلوب:
-
-استخرج البيانات التالية فقط:
-
-- verse:
-النص الشعري فقط بدون الشرح
-
-- vocabulary:
-قسم المفردات فقط
-
-- meaning:
-قسم المعنى فقط
-
-- grammar:
-قسم الإعراب فقط
-
-مهم جداً:
-
-- لا تستخرج أكثر من بيت واحد
-- لا تعتبر الشرح أو الإعراب بيتاً شعرياً
-- لا تقسم النص
-- أعد النتيجة JSON فقط
-
-الصيغة المطلوبة:
-
-[
-  {
-    "verse": "...",
-    "vocabulary": "...",
-    "meaning": "...",
-    "grammar": "..."
-  }
-]
-
-النص:
-"""
-
-    def load_data(self):
-
-        chunks = []
-
-        for f in self.files:
-
-            try:
-
-                with open(f, "r", encoding="utf-8") as file:
-                    content = file.read()
-
-                # تقسيم النص
-                parts = re.split(r'-{15,}', content)
-
-                for part in parts:
-
-                    chunk = part.strip()
-
-                    if len(chunk) > 50:
-                        chunks.append(chunk)
-
-            except Exception as e:
-
-                print(f" Error reading {f}: {e}")
-
-        print(f"Total chunks loaded: {len(chunks)}")
-
-        return chunks
-
-    def parse_text(self, text):
-
-        if text in self.cache:
-
-            print("Loaded from cache")
-
-            return self.cache[text]
-
-        response = self.client.chat.completions.create(
-
-            model=self.model_name,
-
-            temperature=0.2,
-
-            messages=[
-                {
-                    "role": "user",
-                    "content": self.prompt_template + text
-                }
-            ]
-        )
-
-        content = response.choices[0].message.content
-
-        try:
-
-            clean_json = re.sub(
-                r'```json|```',
-                '',
-                content
-            ).strip()
-
-            result = json.loads(clean_json)
-
-            self.cache[text] = result
-
-            self.save_cache()
-
-            return result
-
-        except Exception as e:
-
-            print(f"JSON/API Error: {e}")
-
-            return []
-
-
-    def save_cache(self):
-
-        with open(self.cache_file, "w", encoding="utf-8") as f:
-
-            json.dump(
-                self.cache,
-                f,
-                ensure_ascii=False,
-                indent=2
-            )
-
-        print("cache saved")
 
     def generate_embedding(self, text):
 
         return self.embedding_model.encode(text).tolist()
+
 
     def insert_graph(self, item):
 
@@ -200,7 +49,12 @@ class PoetryPipeline:
 
         tx.run("""
 
+        MERGE (p:Poet {
+            name: $poet
+        })
+
         MERGE (v:Verse {
+            verse_number: $verse_number,
             text: $verse
         })
 
@@ -213,8 +67,10 @@ class PoetryPipeline:
         })
 
         MERGE (vo:Vocabulary {
-            text: $vocab
+            text: $vocabulary
         })
+
+        MERGE (p)-[:WROTE]->(v)
 
         MERGE (v)-[:HAS_MEANING]->(m)
 
@@ -226,61 +82,79 @@ class PoetryPipeline:
 
         """,
 
+        poet=item.get("poet", ""),
+
+        verse_number=item.get("verse_number", ""),
+
         verse=item.get("verse", ""),
 
         meaning=item.get("meaning", ""),
 
-        grammar=json.dumps(
-            item.get("grammar", {}),
-            ensure_ascii=False
-        ),
+        grammar=item.get("grammar", ""),
 
-        vocab=json.dumps(
-            item.get("vocabulary", {}),
-            ensure_ascii=False
-        ),
+        vocabulary=item.get("vocabulary", ""),
 
         embedding=item.get("embedding", [])
         )
 
+    def process_split(self, split_name):
+
+        print(f"\nProcessing {split_name} split...\n")
+
+        split_data = self.dataset[split_name]
+
+        for row in split_data:
+
+            try:
+
+                item = {
+
+                    "poet": row.get("الشاعر", ""),
+
+                    "verse_number": row.get("رقم البيت", ""),
+
+                    "verse": row.get("البيت", ""),
+
+                    "vocabulary": row.get("المفردات", ""),
+
+                    "meaning": row.get("المعنى", ""),
+
+                    "grammar": row.get("الإعراب", "")
+                }
+
+                # embedding from verse only
+                embedding = self.generate_embedding(
+                    item["verse"]
+                )
+
+                item["embedding"] = embedding
+
+                # save to neo4j
+                self.insert_graph(item)
+
+                print(
+                    f" Saved verse {item['verse_number']} "
+                    f"for {item['poet']}"
+                )
+
+            except Exception as e:
+
+                print(f" Error: {e}")
+
+
     def run(self):
 
-        chunks = self.load_data()
+        # Process train
+        self.process_split("train")
 
-        for chunk in chunks:
-
-            items = self.parse_text(chunk)
-
-            for item in items:
-
-                if "verse" in item:
-
-                    embedding = self.generate_embedding(
-                        item["verse"]
-                    )
-
-                    item["embedding"] = embedding
-
-
-                    self.insert_graph(item)
-
-                    print(
-                        f" save successfully "
-                        f"{item['verse'][:40]}..."
-                    )
+        # Process test
+        self.process_split("test")
 
         self.driver.close()
 
+        print("\n Pipeline completed successfully")
 
-files = [
 
-    "Dataset/معلقة الأعشى.txt",
-
-    "Dataset/معلقة عنترة بن شداد.txt",
-
-    "Dataset/معلقة لبيد بن ربيعة.txt"
-]
-
-pipeline = PoetryPipeline(files)
+pipeline = PoetryPipeline()
 
 pipeline.run()
