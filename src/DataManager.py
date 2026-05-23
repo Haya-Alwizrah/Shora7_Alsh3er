@@ -2,16 +2,17 @@ import os
 import pandas as pd
 import chromadb
 from chromadb.utils import embedding_functions
+from datasets import load_dataset
 
 
 class DataManager:
-    def __init__(self, excel_path, db_path, collection_name, EMBEDDING_MODEL):
+    def __init__(self, dataset_name, db_path, collection_name, EMBEDDING_MODEL):
 
         self.client = chromadb.PersistentClient(path=db_path)
         self.collection_name = collection_name
         self.embed_model = EMBEDDING_MODEL
         
-        self.excel_path = excel_path
+        self.dataset_name = dataset_name
 
         self.chunks = []
         self.metadatas = []
@@ -26,24 +27,35 @@ class DataManager:
         return self.embedding_func
     
     def load_files(self):
-        df = pd.read_excel(self.excel_path)
+        print(f"Loading dataset from HuggingFace: {self.dataset_name}...")
+        dataset = load_dataset(self.dataset_name)
+        
+        all_splits = ['train', 'test']
+        
+        for split in all_splits:
+            if split in dataset:
+                for row in dataset[split]:
+                    
+                    poet = row.get("الشاعر", "") or ""
+                    verse_number = row.get("رقم البيت", "") or ""
+                    verse = row.get("البيت", "") or ""
+                    vocabulary = row.get("المفردات", "") or "غير متوفر"
+                    meaning = row.get("المعنى", "") or "غير متوفر"
+                    grammar = row.get("الاعراب", "") or "غير متوفر"
 
-        for idx, row in df.iterrows():
-            chunk = f"""
-البيت: {row['البيت']}
-المفردات: {row['المفردات']}
-المعنى: {row['المعنى']}
-الاعراب: {row['الاعراب']}
-"""
+                    chunk = f"""
+                    الشاعر: {poet}
+                    البيت: {verse}
+                    المفردات: {vocabulary}
+                    المعنى: {meaning}
+                    الاعراب: {grammar}
+                    """.strip()
 
-            self.chunks.append(chunk)
-            self.metadatas.append({
-                    "الشاعر": row['الشاعر'],
-                    "رقم البيت": row['رقم البيت']
-                })
-            
-        print(f"Total chunks loaded: {len(self.chunks)}")
-    
+                    self.chunks.append(chunk)
+                    self.metadatas.append({
+                        "الشاعر": poet,
+                        "رقم البيت": str(verse_number)  
+                    })
     def create_collection(self):
         self.collection = self.client.get_or_create_collection(
             name=self.collection_name,

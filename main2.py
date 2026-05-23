@@ -1,5 +1,8 @@
 import os
 from dotenv import load_dotenv
+from src.DataManager import DataManager
+from src.RAGSystem import RAGSystem
+from src.RAGEvaluationSystem import RAGEvaluationSystem
 
 EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
 GROQ_MODEL = "llama-3.1-8b-instant"
@@ -9,7 +12,6 @@ DATA_FOLDER = "Dataset"
 EVAL_PATH = "cache/eval_data.xlsx"
 CHROMA_PATH = "cache/chroma_db"
 COLLECTION_NAME = "poetry"
-EXCEL_PATH = "Dataset/datasets.xlsx"
 
 load_dotenv()
 
@@ -17,22 +19,15 @@ EMBED_MODEL = os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 
-DATA_FOLDER = "Dataset"
-CHROMA_PATH = "cache/chroma_db"
-COLLECTION_NAME = "poetry"
-EVAL_PATH = "cache/eval_data.xlsx"
 
 # --------------------------------------------------------
-from src.DataManager import DataManager
 data_manager = DataManager(
-    excel_path=EXCEL_PATH,
+    dataset_name="SarahALo/The-Ten-Muallaqat-Dataset",  
     db_path=CHROMA_PATH,
-    collection_name=COLLECTION_NAME,
-    EMBEDDING_MODEL=EMBED_MODEL
+    collection_name="muallaqat_collection",
+    EMBEDDING_MODEL=os.getenv("EMBEDDING_MODEL")
 )
-
 data_manager.prepare()
-
 #--------------------------------------------------------
 from src.RAGSystem import RAGSystem
 rag_system = RAGSystem(

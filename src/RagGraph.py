@@ -30,16 +30,29 @@ class GraphRag:
     def _embed_query(self, query):
         return self.model_emb.encode(query).tolist()
 
-
     # 1. VECTOR SEARCH
     def vector_search(self, query, k=2):
 
         query_vector = self._embed_query(query)
 
         cypher = """
-        CALL db.index.vector.queryNodes('verse_vector', $k, $vector)
+        CALL db.index.vector.queryNodes(
+            'verse_vector',
+            $k,
+            $vector
+        )
         YIELD node, score
-        RETURN node, score
+
+        OPTIONAL MATCH (node)-[:HAS_MEANING]->(m)
+        OPTIONAL MATCH (node)-[:HAS_VOCABULARY]->(vo)
+        OPTIONAL MATCH (node)-[:HAS_GRAMMAR]->(g)
+
+        RETURN
+            node,
+            score,
+            m.text AS meaning,
+            vo.text AS vocab,
+            g.text AS grammar
         """
 
         results = []
@@ -49,11 +62,26 @@ class GraphRag:
             rows = session.run(cypher, vector=query_vector, k=k)
 
             for r in rows:
+
                 node = r["node"]
 
                 results.append({
-                    "text": node.get("text", ""),
-                    "score": r["score"],
+                    "text": f"""
+                    البيت:
+                    {node.get('text', '')}
+
+                    المعنى:
+                    {r.get('meaning', '')}
+
+                    المفردات:
+                    {r.get('vocab', '')}
+
+                    الإعراب:
+                    {r.get('grammar', '')}
+                    """.strip(),
+
+                    "score": float(r.get("score", 0)),  
+
                     "source": "vector"
                 })
 
@@ -63,9 +91,23 @@ class GraphRag:
     def keyword_search(self, query, k=2):
 
         cypher = """
-        CALL db.index.fulltext.queryNodes('verse_text', $query)
+        CALL db.index.fulltext.queryNodes(
+            'verse_text',
+            $text_query  
+        )
         YIELD node, score
-        RETURN node, score
+
+        OPTIONAL MATCH (node)-[:HAS_MEANING]->(m)
+        OPTIONAL MATCH (node)-[:HAS_VOCABULARY]->(vo)
+        OPTIONAL MATCH (node)-[:HAS_GRAMMAR]->(g)
+
+        RETURN
+            node,
+            score,
+            m.text AS meaning,
+            vo.text AS vocab,
+            g.text AS grammar
+
         LIMIT $k
         """
 
@@ -73,33 +115,57 @@ class GraphRag:
 
         with self.driver.session() as session:
 
-            rows = session.run(cypher, query=query, k=k)
+            rows = session.run(
+                cypher,
+                text_query=query,  
+                k=k
+            )
 
             for r in rows:
 
                 node = r["node"]
 
                 results.append({
-                    "text": node.get("text", ""),
-                    "score": r["score"],
+                    "text": f"""
+                    البيت:
+                    {node.get('text', '')}
+
+                    المعنى:
+                    {r.get('meaning', '')}
+
+                    المفردات:
+                    {r.get('vocab', '')}
+
+                    الإعراب:
+                    {r.get('grammar', '')}
+                    """.strip(),
+
+                    "score": float(r.get("score", 0)),  
+
                     "source": "keyword"
                 })
 
         return results
 
-    # 3. GRAPH EXPANSION
+    # 3. GRAPH SEARCH
     def graph_search(self, query, k=2):
 
         cypher = """
         MATCH (v:Verse)
-        WHERE v.text CONTAINS $query
+
+        WHERE toLower(v.text) CONTAINS toLower($text_query)  
+        // ✔️ FIX: improved matching (case insensitive)
+
         OPTIONAL MATCH (v)-[:HAS_MEANING]->(m)
         OPTIONAL MATCH (v)-[:HAS_VOCABULARY]->(vo)
         OPTIONAL MATCH (v)-[:HAS_GRAMMAR]->(g)
-        RETURN v.text AS verse,
-               m.text AS meaning,
-               vo.text AS vocab,
-               g.text AS grammar
+
+        RETURN
+            v.text AS verse,
+            m.text AS meaning,
+            vo.text AS vocab,
+            g.text AS grammar
+
         LIMIT $k
         """
 
@@ -107,23 +173,37 @@ class GraphRag:
 
         with self.driver.session() as session:
 
-            rows = session.run(cypher, query=query, k=k)
+            rows = session.run(
+                cypher,
+                text_query=query,  
+                k=k
+            )
 
             for r in rows:
 
                 results.append({
                     "text": f"""
-                    Verse: {r['verse']}
-                    Meaning: {r['meaning']}
-                    Vocabulary: {r['vocab']}
-                    Grammar: {r['grammar']}
+                    البيت:
+                    {r.get('verse', '')}
+
+                    المعنى:
+                    {r.get('meaning', '')}
+
+                    المفردات:
+                    {r.get('vocab', '')}
+
+                    الإعراب:
+                    {r.get('grammar', '')}
                     """.strip(),
+
+                    "score": 0.9,
+
                     "source": "graph"
                 })
 
         return results
 
-    # 4. HYBRID MERGE
+    # 4. HYBRID SEARCH
     def hybrid_search(self, query, k=2):
 
         vector_results = self.vector_search(query, k)
@@ -132,10 +212,9 @@ class GraphRag:
 
         all_results = vector_results + keyword_results + graph_results
 
-        # reranking 
+        # RERANKING
         def weight(r):
-
-            base = float(r["score"])
+            base = float(r.get("score", 0))  
 
             if r["source"] == "vector":
                 return base * 1.0
@@ -148,34 +227,34 @@ class GraphRag:
 
         return ranked[:k]
 
-    # SEARCH CONTEXT
     def search_graph(self, query):
 
         results = self.hybrid_search(query, k=3)
 
-        context = "\n\n---\n\n".join(
+        context = "\n\n-------\n\n".join(
             [r["text"] for r in results]
         )
 
         return context
 
+
     def generate_answer(self, query, context):
 
         system_prompt = """
-            أنت خبير في الشعر العربي (المعلقات).
-            أجب فقط من السياق المقدم.
-            إذا لا يوجد جواب قل: لا أعلم.
-            """
+        أنت خبير في الشعر العربي (المعلقات).
+        أجب فقط من السياق المقدم.
+        إذا لا يوجد جواب قل: لا أعلم.
+        """
 
         user_prompt = f"""
-            Context:
-            {context}
+        Context:
+        {context}
 
-            Question:
-            {query}
+        Question:
+        {query}
 
-            Answer in clear Arabic:
-            """
+        Answer in clear Arabic:
+        """
 
         response = self.client.chat.completions.create(
             model=self.model_name,
@@ -188,7 +267,6 @@ class GraphRag:
 
         return response.choices[0].message.content
 
-
     def ask(self, query):
 
         context = self.search_graph(query)
@@ -200,6 +278,7 @@ class GraphRag:
 
         return answer, context
 
+
     def close(self):
         self.driver.close()
 
@@ -208,10 +287,11 @@ if __name__ == "__main__":
 
     rag = GraphRag()
 
-    q = "ما معنى بيت عنترة في الشجاعة؟"
+    # q = "اشرح بيت (يا دار عبلة بالجواء تكلمي) شرحاً وافياً."
 
-    answer, context = rag.ask(q)
+    # answer, context = rag.ask(q)
 
-    print(answer)
+    # print(answer)
 
     rag.close()
+

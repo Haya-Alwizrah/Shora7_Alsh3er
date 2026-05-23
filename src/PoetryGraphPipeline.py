@@ -22,7 +22,7 @@ class PoetryPipeline:
         )
 
         # Arabic embedding model
-        self.embedding_model = SentenceTransformer(SentenceTransformer(os.getenv("EMBEDDING_MODEL")))
+        self.embedding_model = SentenceTransformer(os.getenv("EMBEDDING_MODEL"))
 
         # Load dataset from HuggingFace
         self.dataset = load_dataset(
@@ -54,11 +54,13 @@ class PoetryPipeline:
         })
 
         MERGE (v:Verse {
-            verse_number: $verse_number,
-            text: $verse
+            poet: $poet,
+            verse_number: $verse_number
         })
-
+        SET v.text = $verse
+            
         MERGE (m:Meaning {
+            id: $verse_number,
             text: $meaning
         })
 
@@ -106,26 +108,24 @@ class PoetryPipeline:
         for row in split_data:
 
             try:
-
                 item = {
-
-                    "poet": row.get("الشاعر", ""),
-
-                    "verse_number": row.get("رقم البيت", ""),
-
-                    "verse": row.get("البيت", ""),
-
-                    "vocabulary": row.get("المفردات", ""),
-
-                    "meaning": row.get("المعنى", ""),
-
-                    "grammar": row.get("الإعراب", "")
+                    "poet": row.get("الشاعر", "") or "",
+                    "verse_number": row.get("رقم البيت", "") or "",
+                    "verse": row.get("البيت", "") or "",
+                    "vocabulary": row.get("المفردات", "") or "غير متوفر",
+                    "meaning": row.get("المعنى", "") or "غير متوفر",
+                    "grammar": row.get("الاعراب", "") or "غير متوفر"
                 }
 
-                # embedding from verse only
-                embedding = self.generate_embedding(
-                    item["verse"]
-                )
+                full_text = f"""
+                    الشاعر: {item['poet']}
+                    البيت: {item['verse']}
+                    المعنى: {item['meaning']}
+                    الإعراب: {item['grammar']}
+                    المفردات: {item['vocabulary']}
+                    """
+
+                embedding = self.generate_embedding(full_text)
 
                 item["embedding"] = embedding
 

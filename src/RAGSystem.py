@@ -9,7 +9,6 @@ load_dotenv(".env")
 class RAGSystem:
 
 
-    # def __init__(self, data_manager, OPENAI_API_KEY, OPENAI_MODEL):
     def __init__(self, data_manager, OPENAI_API_KEY, OPENAI_MODEL):
         self.data_manager = data_manager
         
