@@ -7,11 +7,9 @@ from datasets import load_dataset
 
 class DataManager:
     def __init__(self, dataset_name, db_path, collection_name, EMBEDDING_MODEL):
-
         self.client = chromadb.PersistentClient(path=db_path)
         self.collection_name = collection_name
         self.embed_model = EMBEDDING_MODEL
-        
         self.dataset_name = dataset_name
 
         self.chunks = []
@@ -36,26 +34,24 @@ class DataManager:
             if split in dataset:
                 for row in dataset[split]:
                     
-                    poet = row.get("الشاعر", "") or ""
+                    poet = row.get("الشاعر", "")
                     verse_number = row.get("رقم البيت", "") or ""
                     verse = row.get("البيت", "") or ""
-                    vocabulary = row.get("المفردات", "") or "غير متوفر"
-                    meaning = row.get("المعنى", "") or "غير متوفر"
-                    grammar = row.get("الاعراب", "") or "غير متوفر"
+                    vocabulary = row.get("المفردات", "") or ""
+                    meaning = row.get("المعنى", "") or ""
+                    grammar = row.get("الاعراب", "") or ""
 
-                    chunk = f"""
-                    الشاعر: {poet}
-                    البيت: {verse}
-                    المفردات: {vocabulary}
-                    المعنى: {meaning}
-                    الاعراب: {grammar}
-                    """.strip()
-
+                    chunk = verse
+                    
                     self.chunks.append(chunk)
                     self.metadatas.append({
-                        "الشاعر": poet,
-                        "رقم البيت": str(verse_number)  
+                        "poet": poet,
+                        "verse_number": str(verse_number),
+                        "المفردات": vocabulary,
+                        "المعنى": meaning,
+                        "الاعراب": grammar
                     })
+                    
     def create_collection(self):
         self.collection = self.client.get_or_create_collection(
             name=self.collection_name,
@@ -77,7 +73,7 @@ class DataManager:
         for i in range(0, len(self.chunks), batch_size):
             batch_chunks = self.chunks[i:i+batch_size]
             batch_metadatas = self.metadatas[i:i+batch_size]
-            batch_ids = [f"{m['الشاعر']}_{m['رقم البيت']}" for m in batch_metadatas]
+            batch_ids = [f"{m['poet']}_{m['verse_number']}" for m in batch_metadatas]
 
             self.collection.add(
                 documents=batch_chunks,
@@ -101,7 +97,7 @@ class DataManager:
         self.create_collection()
         self.add_documents()
 
-    def search(self, query, n_results=2):
+    def search(self, query, n_results=1):
         if not self.collection:
             self.create_collection()
             
@@ -109,4 +105,17 @@ class DataManager:
             query_texts=[query],
             n_results=n_results
         )
-        return results["documents"][0]
+
+        context_parts = []
+        for i in range(len(results["documents"][0])):
+            verse = results["documents"][0][i]
+            meta = results["metadatas"][0][i]
+
+            context_parts.append(f"""
+البيت: {verse}
+المفردات: {meta.get('vocabulary', '')}
+المعنى: {meta.get('meaning', '')}
+الإعراب: {meta.get('grammar', '')}
+""")
+
+        return "\n\n".join(context_parts)
