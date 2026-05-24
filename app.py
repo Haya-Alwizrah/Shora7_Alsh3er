@@ -19,10 +19,10 @@ load_dotenv()
 EMBED_MODEL    = os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
 OPENAI_MODEL   = os.getenv("OPENAI_MODEL",    "gpt-4o-mini")
 OPENAI_KEY     = os.getenv("OPENAI_API_KEY")
-DATASET_NAME   = "SarahALo/The-Ten-Muallaqat-Dataset"
-CHROMA_PATH    = "cache/chroma_db"
-COLLECTION_NAME = "poetry"
-EVAL_PATH      = "cache/eval_data.xlsx"
+DATASET        = os.getenv("DATASET", "SarahALo/The-Ten-Muallaqat-Dataset")
+CHROMA_PATH     = "cache/chroma_db"
+COLLECTION_NAME = "muallaqat_collection"
+EVAL_PATH       = "cache/eval_data.xlsx"
 
 
 import sys
@@ -254,7 +254,7 @@ KG_SVG = """
 @st.cache_resource
 def init_systems():
     dm = DataManager(
-        dataset_name="SarahALo/The-Ten-Muallaqat-Dataset", 
+        dataset_name=DATASET, 
         db_path=CHROMA_PATH, 
         collection_name=COLLECTION_NAME, 
         EMBEDDING_MODEL=EMBED_MODEL
