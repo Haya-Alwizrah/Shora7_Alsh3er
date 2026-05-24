@@ -47,9 +47,9 @@ class DataManager:
                     self.metadatas.append({
                         "poet": poet,
                         "verse_number": str(verse_number),
-                        "المفردات": vocabulary,
-                        "المعنى": meaning,
-                        "الاعراب": grammar
+                        "vocabulary": vocabulary,
+                        "meaning": meaning,
+                        "grammar": grammar
                     })
                     
     def create_collection(self):

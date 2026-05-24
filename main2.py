@@ -5,8 +5,8 @@ from src.RAGSystem import RAGSystem
 from src.RAGEvaluationSystem import RAGEvaluationSystem
 load_dotenv()
 
-#EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
-EMBED_MODEL     = os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
+EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
+#EMBED_MODEL     = os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
 DATASET         = os.getenv("DATASET", "SarahALo/The-Ten-Muallaqat-Dataset")
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL",    "gpt-4o-mini")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY")
@@ -26,7 +26,7 @@ data_manager.prepare()
 from src.RAGSystem import RAGSystem
 rag_system = RAGSystem( data_manager, OPENAI_KEY, OPENAI_MODEL)
 
-question = "اعراب أقفر من أهله ملحوب"
+question = "ما معنى تضيء الظلام العشاء كأنها"
 answer, context = rag_system.ask(question)
 print(answer)
 print(context)
