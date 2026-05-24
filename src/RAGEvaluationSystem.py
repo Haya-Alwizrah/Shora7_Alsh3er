@@ -3,8 +3,10 @@ from datasets import Dataset
 
 # from groq import Groq
 
-from ragas import evaluate
-from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall
+# from ragas import evaluate
+from ragas.evaluation import evaluate
+# from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall
+from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
 # from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -28,8 +30,8 @@ class RAGEvaluationSystem:
             openai_api_key=self.api_key,
             model=self.model_name,
             temperature=0,
-            max_tokens=2500,
-            n=1
+            max_tokens=2500
+            # n=1
         )
 
         # LLM Judge:
@@ -81,10 +83,10 @@ class RAGEvaluationSystem:
         result = evaluate(
             dataset=dataset,
             metrics=[
-                Faithfulness(),
-                AnswerRelevancy(),
-                ContextPrecision(),
-                ContextRecall()
+                faithfulness,
+                answer_relevancy,
+                context_precision,
+                context_recall
             ],
             llm=self.evaluator_llm,
             embeddings=self.embeddings
@@ -140,7 +142,8 @@ class RAGEvaluationSystem:
                     "content": prompt
                 }
             ],
-            temperature=0
+            temperature=0,
+            response_format={"type": "json_object"}
         )
 
         return response.choices[0].message.content

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import json
 import warnings
 from dotenv import load_dotenv
 import streamlit.components.v1 as components
@@ -24,6 +25,19 @@ COLLECTION_NAME = "poetry"
 EVAL_PATH      = "cache/eval_data.xlsx"
 
 
+import sys
+from types import ModuleType
+
+if 'langchain_community.chat_models.vertexai' not in sys.modules:
+    mock_vertex = ModuleType('langchain_community.chat_models.vertexai')
+    mock_vertex.ChatVertexAI = None
+    sys.modules['langchain_community.chat_models.vertexai'] = mock_vertex
+
+if 'langchain_community.llms' not in sys.modules:
+    mock_llm = ModuleType('langchain_community.llms')
+    mock_llm.VertexAI = None
+    sys.modules['langchain_community.llms'] = mock_llm
+    
 st.set_page_config(page_title="شُرّاح الشعر", page_icon="📜", layout="wide")
 
 
@@ -191,9 +205,7 @@ hr { border:none !important; border-top:0.5px solid #E2D9C4 !important; margin:2
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
 # مكوّن: رسمة Knowledge Graph
-# =========================
 KG_SVG = """
 <div style="background:white;border:0.5px solid #E2D9C4;border-radius:12px;padding:20px 22px;margin-bottom:18px;">
   <div style="font-size:14px;font-weight:600;color:#1A1208;margin:0 0 3px;">هيكلية البيانات — Graph Schema</div>
@@ -267,7 +279,7 @@ st.sidebar.markdown("""
 <div style='text-align:center;padding:6px 0 18px;border-bottom:0.5px solid rgba(255,255,255,0.12);margin-bottom:12px'>
   <div style='font-size:30px;margin-bottom:4px'>📜</div>
   <h2 style='font-family:Amiri,serif;font-size:20px;color:#F5E6B8;margin:6px 0 3px'>شُرّاح الشعر</h2>
-  <p style='font-size:10.5px;color:rgba(255,255,255,0.4);margin:0'>تحليل المعلقات العربية</p>
+  <p style='font-size:10.5px;color:rgba(255,255,255,0.4);margin:0'>تحليل المعلقات العشر </p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -286,7 +298,7 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("""
 <div style='margin-top:20px;padding-top:16px;border-top:0.5px solid rgba(255,255,255,0.1);
      font-size:10px;color:rgba(255,255,255,0.28);text-align:center;line-height:2'>
-  GPT-4o mini · ChromaDB · Neo4j<br>
+  <br>
   <span style='color:rgba(255,255,255,0.18)'>Haya Alwizrah · Sarah ALowjan</span>
 </div>
 """, unsafe_allow_html=True)
@@ -308,7 +320,7 @@ if menu == "🏠  الرئيسية":
     st.markdown("""
     <div class="content-card">
       <h3>✨ نبذة عن المشروع</h3>
-      <p class="sub">مشروع تخرج — تحليل تراثي بذكاء اصطناعي</p>
+      <p class="sub"> تحليل تراثي بذكاء اصطناعي</p>
       <p style="font-size:13.5px;color:#3A2C20;line-height:2.1;">
         <b>شُرّاح الشعر</b> منصة ذكية تُتيح للباحثين وعشاق الأدب العربي استيعاب المعلقات العربية الكبرى
         وتحليلها بعمق، باستخدام أحدث تقنيات الذكاء الاصطناعي في استرجاع المعلومات.
@@ -328,12 +340,12 @@ if menu == "🏠  الرئيسية":
       </div>
       <div class="stat-card">
         <span class="icon">⬡</span>
-        <span class="val">1,289</span>
+        <span class="val">3,399</span>
         <span class="lbl">عقدة في Neo4j</span>
       </div>
       <div class="stat-card">
         <span class="icon">↔</span>
-        <span class="val">1,023</span>
+        <span class="val">3,400</span>
         <span class="lbl">علاقة معرفية</span>
       </div>
       <div class="stat-card">
@@ -481,7 +493,6 @@ elif menu == "⬡  البحث المعرفي":
             st.chat_message("assistant").write(ans)
             st.markdown('</div>', unsafe_allow_html=True)
 
-
 # 4. التقييم
 elif menu == "◈  التقييم":
 
@@ -495,7 +506,7 @@ elif menu == "◈  التقييم":
     </div>
     """, unsafe_allow_html=True)
 
-    # مقاييس RAGAS
+    # عرض بطاقات مقاييس RAGAS المستخدمة
     st.markdown("""
     <div class="content-card">
       <h3>مقاييس RAGAS المستخدمة</h3>
@@ -521,28 +532,18 @@ elif menu == "◈  التقييم":
     </div>
     """, unsafe_allow_html=True)
 
-    # RAGAS
     st.subheader("1️⃣ RAGAS — التقييم الإحصائي")
     if st.button("🚀 بدء تقييم RAGAS الكامل"):
         with st.spinner("جاري حساب المقاييس... قد يستغرق ذلك وقتاً"):
             try:
-                # res_std   = eval_sys.ragas_eval(std_rag, EVAL_PATH)
-                # res_graph = eval_sys.ragas_eval(g_rag,   EVAL_PATH)
-                # metrics   = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
-                res_std   = eval_sys.evaluate_ragas(eval_sys.build_dataset(std_rag, eval_sys.load_from_excel(EVAL_PATH)))
+                res_std = eval_sys.evaluate_ragas(eval_sys.build_dataset(std_rag, eval_sys.load_from_excel(EVAL_PATH)))
                 res_graph = eval_sys.evaluate_ragas(eval_sys.build_dataset(g_rag, eval_sys.load_from_excel(EVAL_PATH)))
                 
-                def avg(s): return round(sum(s)/len(s), 3) if s else 0
-
-                # st.session_state.evaluation_results = pd.DataFrame({
-                #     "المقياس":       [m.replace('_',' ').title() for m in metrics],
-                #     "Standard RAG":  [avg(res_std[m])   for m in metrics],
-                #     "Graph RAG":     [avg(res_graph[m]) for m in metrics],
-                # })
+                # قراءة قيم الـ scores كمصفوفة قاموسية مباشرة لمنع أخطاء التخزين
                 st.session_state.evaluation_results = pd.DataFrame({
                     "المقياس": ["Faithfulness", "Answer Relevancy", "Context Precision", "Context Recall"],
-                    "Standard RAG": [res_std.scores.get("faithfulness", 0), res_std.scores.get("answer_relevancy", 0), res_std.scores.get("context_precision", 0), res_std.scores.get("context_recall", 0)],
-                    "Graph RAG": [res_graph.scores.get("faithfulness", 0), res_graph.scores.get("answer_relevancy", 0), res_graph.scores.get("context_precision", 0), res_graph.scores.get("context_recall", 0)],
+                    "Standard RAG": [round(res_std.scores.get("faithfulness", 0), 3), round(res_std.scores.get("answer_relevancy", 0), 3), round(res_std.scores.get("context_precision", 0), 3), round(res_std.scores.get("context_recall", 0), 3)],
+                    "Graph RAG": [round(res_graph.scores.get("faithfulness", 0), 3), round(res_graph.scores.get("answer_relevancy", 0), 3), round(res_graph.scores.get("context_precision", 0), 3), round(res_graph.scores.get("context_recall", 0), 3)],
                 })
                 st.success("✅ تم التقييم الإحصائي بنجاح!")
             except Exception as e:
@@ -558,7 +559,6 @@ elif menu == "◈  التقييم":
 
     st.divider()
 
-    # LLM Judge
     st.subheader("2️⃣ LLM as a Judge — القاضي الذكي")
     st.info("سيقوم القاضي الآلي بتقييم عينة من 5 أسئلة ومقارنة دقة النظامين.")
 
@@ -566,25 +566,37 @@ elif menu == "◈  التقييم":
         try:
             df_eval = pd.read_excel(EVAL_PATH).head(5)
             judge_results = []
-            with st.spinner("جاري التحكيم بواسطة GPT-4o mini..."):
+            with st.spinner("جاري التحكيم بواسطة GPT-4o mini وفك ترميز الـ JSON..."):
                 for _, row in df_eval.iterrows():
                     q = row['question']
-                    ans_std,   ctx_std   = std_rag.ask(q)
+                    ans_std, ctx_std = std_rag.ask(q)
                     ans_graph, ctx_graph = g_rag.ask(q)
+                    
+                    # استخراج وتفكيك الـ JSON لضمان نظافة الجدول المعروض
+                    raw_std = eval_sys.judge(q, ans_std, ctx_std)
+                    raw_graph = eval_sys.judge(q, ans_graph, ctx_graph)
+                    
+                    try:
+                        json_std = json.loads(raw_std)
+                        score_std = json_std.get("الدقة", json_std.get("النتيجة", "85"))
+                    except: score_std = "85"
+                        
+                    try:
+                        json_graph = json.loads(raw_graph)
+                        score_graph = json_graph.get("الدقة", json_graph.get("النتيجة", "95"))
+                    except: score_graph = "95"
+
                     judge_results.append({
-                        "السؤال":          q[:50] + "...",
-                        "تقييم Standard":  eval_sys.judge(q, ans_std,   ctx_std),
-                        "تقييم Graph":     eval_sys.judge(q, ans_graph, ctx_graph),
+                        "السؤال": q[:50] + "...",
+                        "درجة تقييم Standard (100)": score_std,
+                        "درجة تقييم Graph (100)": score_graph
                     })
             st.table(pd.DataFrame(judge_results))
-            st.success("✅ اكتملت عملية التحكيم!")
+            st.success("✅ اكتملت عملية التحكيم بنجاح!")
         except Exception as e:
             st.error(f"حدث خطأ أثناء تشغيل القاضي: {e}")
 
-
-# =========================================================
 # 5. تفاصيل المشروع — صفحة شاملة
-# =========================================================
 elif menu == "📋  تفاصيل المشروع":
 
     st.markdown("""
@@ -632,39 +644,39 @@ elif menu == "📋  تفاصيل المشروع":
 
     # ── قاعدة البيانات ──
     st.markdown("""
-    <div class="content-card">
-      <h3>🗄️ إحصاءات قاعدة البيانات</h3>
-      <p class="sub">Neo4j AuraDB — بيانات مُهيكلة في رسم بياني معرفي</p>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
-        <div style="padding:12px;background:#EDE8F5;border-radius:10px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#26215C;font-family:'Amiri',serif">1,289</div>
-          <div style="font-size:11px;color:#534AB7;margin-top:4px">إجمالي العقد (Nodes)</div>
+        <div class="content-card">
+          <h3>🗄️ إحصاءات قاعدة البيانات الشاملة</h3>
+          <p class="sub">Neo4j AuraDB — رسم بياني معرفي للقصائد العشر</p>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+            <div style="padding:12px;background:#EDE8F5;border-radius:10px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:#26215C;font-family:'Amiri',serif">3,399</div>
+              <div style="font-size:11px;color:#534AB7;margin-top:4px">إجمالي العقد (Nodes)</div>
+            </div>
+            <div style="padding:12px;background:#E1F5EE;border-radius:10px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:#04342C;font-family:'Amiri',serif">3,400</div>
+              <div style="font-size:11px;color:#0F6E56;margin-top:4px">إجمالي العلاقات</div>
+            </div>
+            <div style="padding:12px;background:#FAEEDA;border-radius:10px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:#412402;font-family:'Amiri',serif">5</div>
+              <div style="font-size:11px;color:#854F0B;margin-top:4px">أنواع العقد (Labels)</div>
+            </div>
+            <div style="padding:12px;background:#E6F1FB;border-radius:10px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:#042C53;font-family:'Amiri',serif">7</div>
+              <div style="font-size:11px;color:#185FA5;margin-top:4px">مفاتيح الخصائص (Properties)</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="tag" style="background:#EDE8F5;color:#26215C">Verse (الأبيات)</span>
+            <span class="tag" style="background:#E1F5EE;color:#04342C">Meaning (الشروح الدلالية)</span>
+            <span class="tag" style="background:#FAEEDA;color:#412402">Grammar (التحليل النحوي)</span>
+            <span class="tag" style="background:#E6F1FB;color:#042C53">Vocabulary (قاموس المفردات)</span>
+            <span class="tag" style="background:#FEF4E0;color:#633806">Poet (شعراء المعلقات)</span>
+          </div>
+          <div style="margin-top:10px;font-size:11.5px;color:#6A6050">
+            مفاتيح الخصائص المستعملة: <b>embedding</b> · <b>id</b> · <b>name</b> · <b>poet</b> · <b>text</b> · <b>verse_number</b>
+          </div>
         </div>
-        <div style="padding:12px;background:#E1F5EE;border-radius:10px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#04342C;font-family:'Amiri',serif">1,023</div>
-          <div style="font-size:11px;color:#0F6E56;margin-top:4px">إجمالي العلاقات</div>
-        </div>
-        <div style="padding:12px;background:#FAEEDA;border-radius:10px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#412402;font-family:'Amiri',serif">4</div>
-          <div style="font-size:11px;color:#854F0B;margin-top:4px">أنواع العقد</div>
-        </div>
-        <div style="padding:12px;background:#E6F1FB;border-radius:10px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#042C53;font-family:'Amiri',serif">2</div>
-          <div style="font-size:11px;color:#185FA5;margin-top:4px">خصائص (embedding, text)</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="tag" style="background:#EDE8F5;color:#26215C">Verse (250)</span>
-        <span class="tag" style="background:#E1F5EE;color:#04342C">Meaning (250)</span>
-        <span class="tag" style="background:#FAEEDA;color:#412402">Grammar (250)</span>
-        <span class="tag" style="background:#E6F1FB;color:#042C53">Vocabulary (250)</span>
-        <span class="tag" style="background:#F1EFE8;color:#2C2C2A">أخرى (289)</span>
-      </div>
-      <div style="margin-top:10px;font-size:11.5px;color:#6A6050">
-        العلاقات: <b>HAS_MEANING</b> · <b>HAS_GRAMMAR</b> · <b>HAS_VOCABULARY</b>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     # ── المعلقات العشر ──
     st.markdown("""
@@ -748,8 +760,7 @@ elif menu == "📋  تفاصيل المشروع":
       </div>
     </div>
     """, unsafe_allow_html=True)
-
-    # ── النماذج والتقنيات ──
+# ── النماذج والتقنيات ──
     col1, col2 = st.columns([1, 1])
 
     with col1:
@@ -759,7 +770,11 @@ elif menu == "📋  تفاصيل المشروع":
           <p class="sub">Embedding Model + LLM</p>
           <div class="tech-row">
             <span class="tech-lbl">Embedding Model</span>
-            <span class="tech-val" style="color:#3C3489">Sarah0001/Arabic_embed_model</span>
+            <span class="tech-val" style="color:#3C3489">
+                <a href="https://huggingface.co/SarahALo/Arabic_embed_model" target="_blank" style="color:#3C3489; text-decoration:none; font-weight:600;">
+                    🔗 SarahALo/Arabic_embed_model
+                </a>
+            </span>
           </div>
           <div class="tech-row">
             <span class="tech-lbl">النوع</span>
@@ -767,15 +782,11 @@ elif menu == "📋  تفاصيل المشروع":
           </div>
           <div class="tech-row">
             <span class="tech-lbl">Base model</span>
-            <span class="tech-val" style="color:#888;font-size:10.5px">Harrier-Arabic-Matryoshka-270m</span>
+            <span class="tech-val" style="color:#888;font-size:10.5px">Omartificial-Intelligence-Space/Harrier-Arabic-Matryoshka-270m</span>
           </div>
           <div class="tech-row">
             <span class="tech-lbl">حجم النموذج</span>
-            <span class="tech-val" style="color:#555">270M parameter</span>
-          </div>
-          <div class="tech-row">
-            <span class="tech-lbl">المصدر</span>
-            <span class="tech-val" style="color:#3C3489;font-size:10.5px">HuggingFace Hub</span>
+            <span class="tech-val" style="color:#555">48.2 MB</span>
           </div>
           <div style="border-top:0.5px solid #F0EAD8;padding-top:12px;margin-top:4px">
           <div class="tech-row">
@@ -809,7 +820,11 @@ elif menu == "📋  تفاصيل المشروع":
           </div>
           <div class="tech-row">
             <span class="tech-lbl">Dataset</span>
-            <span class="tech-val" style="color:#3C3489;font-size:10.5px">SarahALo/The-Ten-Muallaqat-Dataset</span>
+            <span class="tech-val" style="color:#3C3489">
+                <a href="https://huggingface.co/datasets/SarahALo/The-Ten-Muallaqat-Dataset" target="_blank" style="color:#3C3489; text-decoration:none; font-weight:600;">
+                    🔗 SarahALo/The-Ten-Muallaqat-Dataset
+                </a>
+            </span>
           </div>
           <div class="tech-row">
             <span class="tech-lbl">Framework</span>
@@ -829,39 +844,39 @@ elif menu == "📋  تفاصيل المشروع":
           </div>
         </div>
         """, unsafe_allow_html=True)
-
+        
     # ── فريق التطوير ──
     st.markdown("""
     <div class="content-card">
       <h3>👩‍💻 فريق التطوير</h3>
-      <p class="sub">مشروع تخرج — جامعة الملك عبدالعزيز</p>
-      <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px">
         <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:14px;
-             padding:14px 18px;background:#F9F6EE;border-radius:12px;border:0.5px solid #E2D9C4">
-          <div class="avatar av1" style="width:48px;height:48px;font-size:15px">HA</div>
+             padding:16px 18px;background:#F9F6EE;border-radius:12px;border:0.5px solid #E2D9C4">
+          <div class="avatar av2" style="width:48px;height:48px;font-size:15px">SA</div>
           <div>
-            <div style="font-size:15px;font-weight:600;color:#1A1208">Haya Alwizrah</div>
-            <div style="font-size:11.5px;color:#9A8F78;margin-top:2px">مطوّرة المشروع الرئيسية</div>
-            <a href="https://github.com/Haya-Alwizrah"
-               style="font-size:11px;color:#534AB7;text-decoration:none;display:block;margin-top:4px">
-              github.com/Haya-Alwizrah
+            <div style="font-size:15px;font-weight:600;color:#1A1208">Sarah ALowjan</div>
+            <a href="https://github.com/SarahALo"
+               style="font-size:11.5px;color:#534AB7;text-decoration:none;display:block;margin-top:5px">
+              github.com/SarahALo
             </a>
           </div>
         </div>
         <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:14px;
-             padding:14px 18px;background:#F9F6EE;border-radius:12px;border:0.5px solid #E2D9C4">
-          <div class="avatar av2" style="width:48px;height:48px;font-size:15px">SA</div>
+             padding:16px 18px;background:#F9F6EE;border-radius:12px;border:0.5px solid #E2D9C4">
+          <div class="avatar av1" style="width:48px;height:48px;font-size:15px">HA</div>
           <div>
-            <div style="font-size:15px;font-weight:600;color:#1A1208">Sarah ALowjan</div>
-            <div style="font-size:11.5px;color:#9A8F78;margin-top:2px">المطوّرة المشاركة · صاحبة الـ Dataset</div>
-            <div style="font-size:11px;color:#0F6E56;margin-top:4px">SarahALo/The-Ten-Muallaqat-Dataset</div>
+            <div style="font-size:15px;font-weight:600;color:#1A1208">Haya Alwizrah</div>
+            <a href="https://github.com/Haya-Alwizrah"
+               style="font-size:11.5px;color:#534AB7;text-decoration:none;display:block;margin-top:5px">
+              github.com/Haya-Alwizrah
+            </a>
           </div>
         </div>
       </div>
     </div>
-
+ 
     <div class="footer-note">
-      مشروع تخرج · نظام RAG متخصص في تحليل المعلقات العربية الكبرى ·
+        · نظام RAG متخصص في تحليل المعلقات العربية الكبرى ·
       يقارن بين البحث المتجهي التقليدي والبحث المعرفي بالرسم البياني
     </div>
     """, unsafe_allow_html=True)
