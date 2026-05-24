@@ -1,4 +1,3 @@
-```markdown
 # 📜 Shura7 Al-Sh3er (شُرّاح الشعر) — Arabic Poetry Expert System
 
 An advanced Arabic Natural Language Processing (NLP) system specialized in analyzing, explaining, and parsing (**إعراب**) the **Ten Arabic Mu'allaqat** using two RAG architectures:
@@ -30,7 +29,6 @@ graph TD
     E --> F[Hybrid Search: Vector + Full-Text + Graph Search + Reranking]
     F --> G[Phase 4: Response Generation - GPT-4o Mini]
     G --> H[Phase 5: Evaluation - RAGAS Framework & LLM-as-a-Judge]
-
 ```
 
 ---
@@ -40,8 +38,8 @@ graph TD
 * **Large Language Model (LLM):** OpenAI `gpt-4o-mini` for contextual answer generation and evaluation.
 * **Embedding Model:** `Sarah0001/Arabic_embed_model`, a specialized Arabic sentence transformer for semantic understanding.
 * **Databases:**
-* **ChromaDB:** Vector database for semantic search.
-* **Neo4j AuraDB:** Graph database for storing grammatical, semantic, and vocabulary relationships.
+  * **ChromaDB:** Vector database for semantic search.
+  * **Neo4j AuraDB:** Graph database for storing grammatical, semantic, and vocabulary relationships.
 
 
 * **Frameworks & Tools:** Streamlit, LangChain, Datasets, and RAGAS.
@@ -103,20 +101,20 @@ SET v.embedding = $embedding
 The **GraphRAG** pipeline uses a hybrid retrieval system combined with custom reranking to improve answer quality and relevance.
 
 ### Retrieval Steps
+1. **Vector Search**  
+   Queries the `verse_vector` index using semantic similarity between embeddings.
 
-1. **Vector Search**
-Queries the `verse_vector` index using semantic similarity between embeddings.
-2. **Full-Text Search**
-Queries the `verse_text` index to retrieve exact keyword matches from classical Arabic poetry.
-3. **Graph Search**
-Uses the graph structure to retrieve connected meaning, grammar, and vocabulary nodes.
-4. **Weighted Reranking**
-Combines results from all retrieval methods and reranks them using custom weights:
+2. **Full-Text Search**  
+   Queries the `verse_text` index to retrieve exact keyword matches from classical Arabic poetry.
+
+3. **Graph Search**  
+   Uses the graph structure to retrieve connected meaning, grammar, and vocabulary nodes.
+
+4. **Weighted Reranking**  
+   Combines results from all retrieval methods and reranks them using custom weights:
 * Vector Search → `1.0`
 * Keyword Search → `1.2`
 * Graph Search → `1.1`
-
-
 
 The final top-ranked contexts are then passed to the LLM for answer generation.
 
@@ -189,7 +187,6 @@ A secondary `gpt-4o-mini` model acts as an evaluation judge for generated respon
 
 ```bash
 pip install -r requirements.txt
-
 ```
 
 ---
@@ -221,7 +218,6 @@ Run:
 
 ```bash
 python src/PoetryGraphPipeline.py
-
 ```
 
 This indexes the HuggingFace dataset into Neo4j AuraDB.
@@ -234,9 +230,6 @@ ChromaDB is initialized automatically during runtime.
 
 ```bash
 streamlit run app.py
-
 ```
 
-```
 
-```
