@@ -94,7 +94,6 @@ KG_SVG = """
 
 def render_home(std_rag, g_rag):
     """عرض الصفحة الرئيسية بالترتيب والانسيابية الجديدة للمستخدم العام"""
-    # ── 1. رأس الصفحة والنبذة المدمجة ──
     st.markdown("""
     <div class="shurah-header">
       <div>
@@ -112,7 +111,6 @@ def render_home(std_rag, g_rag):
     </div>
     """, unsafe_allow_html=True)
     
-    # ── 2. تعديل 1: نقل فقرة "ما يقدمه النظام" لتصبح مباشرة بعد النبذة ──
     st.markdown("""
     <div class="content-card">
       <h3>🚀 ما يقدمه النظام</h3>
@@ -138,7 +136,6 @@ def render_home(std_rag, g_rag):
     <br>
     """, unsafe_allow_html=True)
     
-    # ── 3. تعديل 2: دليل توجيه مبسط ومريح للمستخدم غير المبرمج (قبل اختيار نظام البحث) ──
     st.markdown("""
     <div class="content-card" style="background-color: #FAF8F2; border-color: #DDD5B8;">
       <h3 style="color: #5B2D0E;">💡 كيف تختار نظام البحث المناسب لسؤالك؟</h3>
@@ -160,7 +157,6 @@ def render_home(std_rag, g_rag):
     </div>
     """, unsafe_allow_html=True)
 
-    # ── 4. ساحة البحث (المركز الجديد والأنيق) ──
     st.markdown("""
     <div style="text-align: center; margin: 25px 0 10px 0;">
         <h3 style="font-family:'Amiri', serif; font-size:22px; color:#5B2D0E; margin-bottom: 4px;">🔍 ابدأ بالتحليل والاستعلام الآن</h3>
@@ -194,7 +190,7 @@ def render_home(std_rag, g_rag):
                 st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="footer-note">مشروع تخرج · <b>Haya Alwizrah</b> و <b>Sarah ALowjan</b> · نظام RAG متخصص في تحليل المعلقات العربية الكبرى</div>
+    <div class="footer-note">مشروع معسكر معالجة اللغة العربية · <b>Haya Alwizrah</b> و <b>Sarah ALowjan</b> · نظام RAG متخصص في تحليل المعلقات العشر</div>
     """, unsafe_allow_html=True)
 
 
@@ -335,7 +331,7 @@ def render_details():
     
     <div class="content-card">
       <h3>🗄️ إحصاءات قاعدة البيانات الشاملة</h3>
-      <p class="sub">Neo4j AuraDB — رسم بياني معرفي للقصائد العشر</p>
+      <p class="sub">Neo4j AuraDB — رسم بياني معرفي للمعلقات العشر</p>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
         <div style="padding:12px;background:#EDE8F5;border-radius:10px;text-align:center">
           <div style="font-size:20px;font-weight:700;color:#26215C;font-family:'Amiri',serif">3,399</div><div style="font-size:11px;color:#534AB7;margin-top:4px">إجمالي العقد (Nodes)</div>
@@ -353,7 +349,7 @@ def render_details():
     </div>
     
     <div class="content-card">
-      <h3>📜 المعلقات العشر الكبرى</h3>
+      <h3>📜 المعلقات العشر </h3>
       <p class="sub">جميع المعلقات المُدرجة في Dataset</p>
       <div class="muallaqat-grid">
         <div class="muallaqat-item"><div class="m-avatar" style="background:#EDE8F5;color:#26215C">امق</div><div><div class="m-name">معلقة امرئ القيس</div><div class="m-desc">قفا نبكِ من ذِكرى حبيب ومنزل</div></div></div>

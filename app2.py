@@ -3,6 +3,8 @@ import pandas as pd
 import os
 import warnings
 from dotenv import load_dotenv
+import sys
+from types import ModuleType
 
 warnings.filterwarnings("ignore")
 
@@ -11,12 +13,10 @@ from src.RAGSystem import RAGSystem
 from src.RagGraph import GraphRag
 from src.RAGEvaluationSystem import RAGEvaluationSystem
 
-# استيراد التصاميم والصفحات المحدثة
 from views import CSS_STYLE, render_home, render_evaluation, render_details
 
 load_dotenv()
 
-# ── الإعدادات والمتغيرات ──
 EMBED_MODEL    = os.getenv("EMBEDDING_MODEL2", "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2")
 OPENAI_MODEL   = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENAI_KEY     = os.getenv("OPENAI_API_KEY")
@@ -24,10 +24,6 @@ DATASET        = os.getenv("DATASET", "SarahALo/The-Ten-Muallaqat-Dataset")
 CHROMA_PATH     = "cache/chroma_db"
 COLLECTION_NAME = "muallaqat_collection"
 EVAL_PATH       = "cache/eval_data.xlsx"
-
-# ── معالجة بيئة التشغيل المحلية والـ Mocking ──
-import sys
-from types import ModuleType
 
 if 'langchain_community.chat_models.vertexai' not in sys.modules:
     mock_vertex = ModuleType('langchain_community.chat_models.vertexai')
@@ -41,10 +37,8 @@ if 'langchain_community.llms' not in sys.modules:
     
 st.set_page_config(page_title="شُرّاح الشعر", page_icon="📜", layout="wide")
 
-# تطبيق الستايل الخاص المجلوب من views
 st.markdown(CSS_STYLE, unsafe_allow_html=True)
 
-# ── تهيئة محركات الـ RAG والذكاء الاصطناعي ──
 @st.cache_resource
 def init_systems():
     dm = DataManager(
@@ -68,7 +62,6 @@ except Exception as e:
 if "evaluation_results" not in st.session_state:
     st.session_state.evaluation_results = None
 
-# ── السايدبار النظيف (Clean Sidebar) ──
 st.sidebar.markdown("""
 <div style='text-align:center;padding:6px 0 18px;border-bottom:0.5px solid rgba(255,255,255,0.12);margin-bottom:12px'>
   <div style='font-size:30px;margin-bottom:4px'>📜</div>
@@ -80,7 +73,7 @@ st.sidebar.markdown("""
 menu = st.sidebar.radio(
     "",
     [
-        "🏠  الرئيسية والبحث",
+        "🏠 الرئيسية",
         "◈  لوحة التقييم",
         "📋  تفاصيل المشروع",
     ],
@@ -95,8 +88,7 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── التوجيه والـ Routing ──
-if menu == "🏠  الرئيسية والبحث":
+if menu == "🏠 الرئيسية":
     render_home(std_rag, g_rag)
 
 elif menu == "◈  لوحة التقييم":
