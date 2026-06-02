@@ -5,8 +5,7 @@ from src.RAGSystem import RAGSystem
 from src.RAGEvaluationSystem import RAGEvaluationSystem
 load_dotenv()
 
-EMBED_MODEL = "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2"
-#EMBED_MODEL     = os.getenv("EMBEDDING_MODEL", "Sarah0001/Arabic_embed_model")
+EMBED_MODEL     = os.getenv("EMBEDDING_MODEL2", "Omartificial-Intelligence-Space/Arabic-Triplet-Matryoshka-V2")
 DATASET         = os.getenv("DATASET", "SarahALo/The-Ten-Muallaqat-Dataset")
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL",    "gpt-4o-mini")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY")
