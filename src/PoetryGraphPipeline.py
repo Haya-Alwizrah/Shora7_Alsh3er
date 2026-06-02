@@ -2,7 +2,10 @@ from datasets import load_dataset
 from neo4j import GraphDatabase
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+
 import os
+import json
+
 
 class PoetryPipeline:
 
@@ -19,18 +22,23 @@ class PoetryPipeline:
         )
 
         # Arabic embedding model
-        self.embedding_model = SentenceTransformer(os.getenv("EMBEDDING_MODEL2"))
+        self.embedding_model = SentenceTransformer(os.getenv("EMBEDDING_MODEL"))
+
+        # Load dataset from HuggingFace
         self.dataset = load_dataset(
-            os.getenv("DATASET", "SarahALo/The-Ten-Muallaqat-Dataset")
+            "SarahALo/The-Ten-Muallaqat-Dataset"
         )
 
 
     def generate_embedding(self, text):
+
         return self.embedding_model.encode(text).tolist()
 
 
     def insert_graph(self, item):
+
         with self.driver.session() as session:
+
             session.execute_write(
                 self._create_nodes,
                 item
@@ -91,13 +99,14 @@ class PoetryPipeline:
         embedding=item.get("embedding", [])
         )
 
-    def _process_split(self, split_name):
+    def process_split(self, split_name):
 
         print(f"\nProcessing {split_name} split...\n")
 
         split_data = self.dataset[split_name]
 
         for row in split_data:
+
             try:
                 item = {
                     "poet": row.get("الشاعر", "") or "",
@@ -129,16 +138,17 @@ class PoetryPipeline:
                 )
 
             except Exception as e:
+
                 print(f" Error: {e}")
 
 
     def run(self):
 
         # Process train
-        self._process_split("train")
+        self.process_split("train")
 
         # Process test
-        self._process_split("test")
+        self.process_split("test")
 
         self.driver.close()
 

@@ -1,13 +1,11 @@
 import pandas as pd
 from datasets import Dataset
 
-# from groq import Groq
-
 # from ragas import evaluate
 from ragas.evaluation import evaluate
 # from ragas.metrics import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
-# from langchain_groq import ChatGroq
+
 from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 import os
