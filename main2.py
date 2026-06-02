@@ -24,9 +24,9 @@ data_manager = DataManager(
 data_manager.prepare()
 #--------------------------------------------------------
 from src.RAGSystem import RAGSystem
-rag_system = RAGSystem( data_manager, OPENAI_KEY, OPENAI_MODEL)
+rag_system = RAGSystem(data_manager)
 
-question = "ما معنى تضيء الظلام العشاء كأنها"
+question = "ما معنى تضيء الظلام العشاء"
 answer, context = rag_system.ask(question)
 print(answer)
 print(context)

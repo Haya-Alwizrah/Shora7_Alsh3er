@@ -261,7 +261,7 @@ def init_systems():
         EMBEDDING_MODEL=EMBED_MODEL
     )
     dm.prepare()
-    standard_rag = RAGSystem(dm, OPENAI_KEY, OPENAI_MODEL)
+    standard_rag = RAGSystem(dm)
     graph_rag    = GraphRag()
     evaluator    = RAGEvaluationSystem(OPENAI_KEY, OPENAI_MODEL, EMBED_MODEL)
     return standard_rag, graph_rag, evaluator

@@ -9,7 +9,7 @@ load_dotenv(".env")
 class RAGSystem:
 
 
-    def __init__(self, data_manager, OPENAI_API_KEY, OPENAI_MODEL):
+    def __init__(self, data_manager):
         self.data_manager = data_manager
 
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -17,7 +17,6 @@ class RAGSystem:
         
     def ask(self, query):
         context = self.data_manager.search(query)
-        #context = "\n\n".join(docs)
 
         prompt = f"""
             النص المرجعي:
