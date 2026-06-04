@@ -155,6 +155,6 @@ class PoetryPipeline:
         print("\n Pipeline completed successfully")
 
 
-pipeline = PoetryPipeline()
-
-pipeline.run()
+if __name__ == "__main__":
+    pipeline = PoetryPipeline()
+    pipeline.run()

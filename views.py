@@ -233,18 +233,39 @@ def render_evaluation(eval_sys, std_rag, g_rag, eval_path):
     if st.button("🚀 بدء تقييم RAGAS الكامل"):
         with st.spinner("جاري حساب المقاييس... قد يستغرق ذلك وقتاً"):
             try:
+                # 1. تشغيل التقييم
                 res_std = eval_sys.evaluate_ragas(eval_sys.build_dataset(std_rag, eval_sys.load_from_excel(eval_path)))
                 res_graph = eval_sys.evaluate_ragas(eval_sys.build_dataset(g_rag, eval_sys.load_from_excel(eval_path)))
                 
+                # 2. تحويل النتائج (القائمة) إلى Pandas DataFrame لسهولة استخراج المتوسط
+                df_std = res_std.to_pandas() if hasattr(res_std, 'to_pandas') else pd.DataFrame(res_std)
+                df_graph = res_graph.to_pandas() if hasattr(res_graph, 'to_pandas') else pd.DataFrame(res_graph)
+                
+                # 3. دالة صغيرة آمنة لحساب المتوسط لكل مقياس
+                def get_mean(df, metric_name):
+                    return round(df[metric_name].mean(), 3) if metric_name in df.columns else 0.0
+
+                # 4. بناء جدول النتائج النهائي
                 st.session_state.evaluation_results = pd.DataFrame({
                     "المقياس": ["Faithfulness", "Answer Relevancy", "Context Precision", "Context Recall"],
-                    "Standard RAG": [round(res_std.scores.get("faithfulness", 0), 3), round(res_std.scores.get("answer_relevancy", 0), 3), round(res_std.scores.get("context_precision", 0), 3), round(res_std.scores.get("context_recall", 0), 3)],
-                    "Graph RAG": [round(res_graph.scores.get("faithfulness", 0), 3), round(res_graph.scores.get("answer_relevancy", 0), 3), round(res_graph.scores.get("context_precision", 0), 3), round(res_graph.scores.get("context_recall", 0), 3)],
+                    "Standard RAG": [
+                        get_mean(df_std, "faithfulness"), 
+                        get_mean(df_std, "answer_relevancy"), 
+                        get_mean(df_std, "context_precision"), 
+                        get_mean(df_std, "context_recall")
+                    ],
+                    "Graph RAG": [
+                        get_mean(df_graph, "faithfulness"), 
+                        get_mean(df_graph, "answer_relevancy"), 
+                        get_mean(df_graph, "context_precision"), 
+                        get_mean(df_graph, "context_recall")
+                    ],
                 })
                 st.success("✅ تم التقييم الإحصائي بنجاح!")
             except Exception as e:
                 st.error(f"حدث خطأ في RAGAS: {e}")
 
+    # هذا الجزء يبقى كما هو لعرض النتائج
     if st.session_state.evaluation_results is not None:
         st.markdown('<div class="content-card"><h3>📈 نتائج المقارنة</h3>', unsafe_allow_html=True)
         st.table(st.session_state.evaluation_results)
@@ -272,13 +293,15 @@ def render_evaluation(eval_sys, std_rag, g_rag, eval_path):
                     
                     try:
                         json_std = json.loads(raw_std)
-                        score_std = json_std.get("الدقة", json_std.get("النتيجة", "85"))
-                    except: score_std = "85"
+                        score_std = json_std.get("الدقة", json_std.get("النتيجة", "N/A"))
+                    except (json.JSONDecodeError, KeyError, TypeError):
+                        score_std = "N/A"
                         
                     try:
                         json_graph = json.loads(raw_graph)
-                        score_graph = json_graph.get("الدقة", json_graph.get("النتيجة", "95"))
-                    except: score_graph = "95"
+                        score_graph = json_graph.get("الدقة", json_graph.get("النتيجة", "N/A"))
+                    except (json.JSONDecodeError, KeyError, TypeError):
+                        score_graph = "N/A"
 
                     judge_results.append({
                         "السؤال": q[:50] + "...",
