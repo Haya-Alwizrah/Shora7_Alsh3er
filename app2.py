@@ -8,7 +8,7 @@ from types import ModuleType
 
 warnings.filterwarnings("ignore")
 
-from src.DataManager import DataManager
+from src.DataManager2 import DataManager2
 from src.RAGSystem import RAGSystem
 from src.RagGraph import GraphRag
 from src.RAGEvaluationSystem import RAGEvaluationSystem
@@ -41,7 +41,7 @@ st.markdown(CSS_STYLE, unsafe_allow_html=True)
 
 @st.cache_resource
 def init_systems():
-    dm = DataManager(
+    dm = DataManager2(
         dataset_name=DATASET, 
         db_path=CHROMA_PATH, 
         collection_name=COLLECTION_NAME, 

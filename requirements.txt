@@ -25,3 +25,5 @@ langchain-openai==0.3.28
 langchain-huggingface
 
 protobuf==3.20.3
+
+rank-bm25
