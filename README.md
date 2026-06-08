@@ -1,9 +1,11 @@
 # 📜 Shura7 Al-Sh3er (شُرّاح الشعر) — Arabic Poetry Expert System
 
-An advanced Arabic Natural Language Processing (NLP) system specialized in analyzing, explaining, and parsing (**إعراب**) the **Ten Arabic Mu'allaqat** using two RAG architectures:
+[Shura7 Al-Sh3er](https://shora7alsh3er.streamlit.app/)
+an advanced Arabic Natural Language Processing (NLP) system specialized in analyzing, explaining, and parsing (**إعراب**) the **Ten Arabic Mu'allaqat** using two RAG architectures:
 
 - **Standard RAG (Vector-based)**
 - **Hybrid GraphRAG (Knowledge Graph-based)**
+
 
 ---
 
@@ -20,15 +22,24 @@ The system follows a complete pipeline starting from dataset loading and embeddi
 
 ```mermaid
 graph TD
-    A[Dataset: Curated & Hosted on HuggingFace] --> B[Phase 1: Loading via HuggingFace Datasets API]
-    B --> C[Phase 2: Embedding Generation via Sarah0001/Arabic_embed_model]
-    C --> D1[Standard RAG Path: Vector Storage - ChromaDB]
-    C --> D2[GraphRAG Path: Knowledge Graph Storage - Neo4j AuraDB]
-    D1 --> E[Phase 3: Multi-Pipeline Retrieval]
-    D2 --> E
-    E --> F[Hybrid Search: Vector + Full-Text + Graph Search + Reranking]
-    F --> G[Phase 4: Response Generation - GPT-4o Mini]
-    G --> H[Phase 5: Evaluation - RAGAS Framework & LLM-as-a-Judge]
+    A[Dataset: SarahALo/The-Ten-Muallaqat-Dataset] --> B[Phase 1: Loading via HuggingFace]
+    B --> C[Phase 2: Embedding Generation]
+
+    %% مساران منفصلان تماماً
+    C --> D1[Standard RAG Path: ChromaDB + BM25]
+    C --> D2[GraphRAG Path: Neo4j AuraDB]
+
+    %% مسار البحث التقليدي
+    D1 --> E1[Phase 3A: Hybrid Search <br> Vector + BM25 + BGE Reranker]
+    E1 --> F1[Phase 4A: Response Generation <br> GPT-4o Mini]
+
+    %% مسار البحث المعرفي
+    D2 --> E2[Phase 3B: Graph Hybrid Search <br> Vector + Full-Text + Graph + RRF]
+    E2 --> F2[Phase 4B: Response Generation <br> GPT-4o Mini]
+
+    %% مرحلة التقييم التي تقارن بين النتيجتين المستقلتين
+    F1 --> G[Phase 5: Evaluation & Comparison <br> RAGAS Framework & LLM-as-a-Judge]
+    F2 --> G
 ```
 
 ---
@@ -135,7 +146,7 @@ The project uses a custom manually curated dataset based on the reference book:
 
 The dataset contains contextual explanations, vocabulary meanings, and grammatical parsing for all:
 
-## **10 Major Arabic Mu'allaqat (المعلقات العشر الكبرى)**
+### **10 Major Arabic Mu'allaqat (المعلقات العشر الكبرى)**
 
 1. **معلقة امرئ القيس** (*قفا نبك من ذكرى حبيب ومنزل*)
 2. **معلقة طرفة بن العبد** (*لخولة أطلال ببرقة ثهمد*)
@@ -229,7 +240,7 @@ ChromaDB is initialized automatically during runtime.
 ### 4. Run the Streamlit Dashboard
 
 ```bash
-streamlit run app.py
+streamlit run app2.py
 ```
 
 
