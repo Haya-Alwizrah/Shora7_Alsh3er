@@ -1,3 +1,6 @@
+import nest_asyncio
+nest_asyncio.apply = lambda *args, **kwargs: None
+
 import streamlit as st
 import pandas as pd
 import os
@@ -8,7 +11,7 @@ from types import ModuleType
 
 warnings.filterwarnings("ignore")
 
-from src.DataManager2 import DataManager2
+from src.DataManager import DataManager
 from src.RAGSystem import RAGSystem
 from src.RagGraph import GraphRag
 from src.RAGEvaluationSystem import RAGEvaluationSystem
