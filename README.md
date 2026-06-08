@@ -240,7 +240,7 @@ ChromaDB is initialized automatically during runtime.
 ### 4. Run the Streamlit Dashboard
 
 ```bash
-streamlit run app2.py
+streamlit run app.py
 ```
 
 
