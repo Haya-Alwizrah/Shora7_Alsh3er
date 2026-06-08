@@ -5,7 +5,7 @@ import re
 from rank_bm25 import BM25Okapi
 from sentence_transformers import CrossEncoder
 
-class DataManager2:
+class DataManager:
     def __init__(self, dataset_name, db_path, collection_name, EMBEDDING_MODEL):
         self.client = chromadb.PersistentClient(path=db_path)
         self.collection_name = collection_name
