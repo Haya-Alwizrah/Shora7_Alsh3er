@@ -44,7 +44,7 @@ st.markdown(CSS_STYLE, unsafe_allow_html=True)
 
 @st.cache_resource
 def init_systems():
-    dm = DataManager2(
+    dm = DataManager(
         dataset_name=DATASET, 
         db_path=CHROMA_PATH, 
         collection_name=COLLECTION_NAME, 
