@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import json
 
-# ── ستايلات وتصاميم الواجهة الثابتة (CSS) ──
 CSS_STYLE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap');
